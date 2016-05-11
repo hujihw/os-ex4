@@ -1,0 +1,15 @@
+# Resources and references
+resources/
+
+### C++ template
+
+# Compiled Object files
+*.o
+
+# Executables
+CachingFileSystem
+
+### JetBrains template
+
+# User-specific stuff:
+.idea/
