@@ -6,6 +6,7 @@
 
 #define FUSE_USE_VERSION 26
 
+#include <iostream>
 #include <fuse.h>
 
 using namespace std;
