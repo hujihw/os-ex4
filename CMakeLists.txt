@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.2)
 project(ex4)
 INCLUDE(FindPkgConfig)
 
@@ -14,3 +14,8 @@ if (${FUSE_FOUND})
     target_link_libraries(CachingFileSystem ${FUSE_LIBRARIES})
     add_definitions(${FUSE_CFLAGS} ${FUSE_CFLAGS_OTHER})
 endif (${FUSE_FOUND})
+
+
+# recipe for testing file
+set(SOURCE_FILES Testing/TestModule.cpp Testing/TestModule.h)
+add_executable(TestModule ${SOURCE_FILES})

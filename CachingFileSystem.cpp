@@ -21,7 +21,10 @@ struct fuse_operations caching_oper;
  * mount option is given.
  */
 int caching_getattr(const char *path, struct stat *statbuf){
-	return 0;
+	cout << "--getattr--" << endl; // todo remove
+    int return_value = stat(path, statbuf);
+    cout << "path: " << *path << endl << "st_dev: " << statbuf->st_dev << endl; // todo remove
+	return return_value;
 }
 
 /**
@@ -54,6 +57,7 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
  */
 int caching_access(const char *path, int mask)
 {
+    cout << "access" << endl;
     return 0;
 }
 
@@ -72,6 +76,7 @@ int caching_access(const char *path, int mask)
  * Changed in version 2.2
  */
 int caching_open(const char *path, struct fuse_file_info *fi){
+    cout << "open" << endl;
 	return 0;
 }
 
@@ -296,7 +301,8 @@ int main(int argc, char* argv[]){
 		argv[i] = NULL;
 	}
         argv[2] = (char*) "-s";
-	argc = 3;
+        argv[3] = (char*) "-f"; // todo remove before submission
+	argc = 4;
 
 	int fuse_stat = fuse_main(argc, argv, &caching_oper, NULL);
 	return fuse_stat;

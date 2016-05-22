@@ -8,6 +8,7 @@ resources/
 
 # Executables
 CachingFileSystem
+TestModule
 
 ### JetBrains template
 
