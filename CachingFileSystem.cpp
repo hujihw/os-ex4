@@ -8,11 +8,30 @@
 
 #include <iostream>
 #include <fuse.h>
+#include <unistd.h>
+#include <memory.h>
 
 using namespace std;
 
+char *rootDir;
+
 struct fuse_operations caching_oper;
 
+/**
+ * @brief Sets the root dir of the current run
+ */
+void set_root_dir(char *root_dir) {
+    if (*((string) root_dir).end() != '/') {
+        ((string) root_dir) += '/';
+    }
+
+    rootDir = root_dir;
+}
+
+void caching_get_absolute_path(char absPath[PATH_MAX], const char *path) {
+    strcpy(absPath, rootDir);
+    strncat(absPath, path, PATH_MAX);
+}
 
 /** Get file attributes.
  *
@@ -21,10 +40,10 @@ struct fuse_operations caching_oper;
  * mount option is given.
  */
 int caching_getattr(const char *path, struct stat *statbuf){
-	cout << "--getattr--" << endl; // todo remove
+    cout << "--getattr--" << endl; // todo remove
     int return_value = stat(path, statbuf);
     cout << "path: " << *path << endl << "st_dev: " << statbuf->st_dev << endl; // todo remove
-	return return_value;
+    return return_value;
 }
 
 /**
@@ -40,7 +59,8 @@ int caching_getattr(const char *path, struct stat *statbuf){
  * Introduced in version 2.5
  */
 int caching_fgetattr(const char *path, struct stat *statbuf, 
-					struct fuse_file_info *fi){
+                    struct fuse_file_info *fi){
+    cout << "-- fgetattr --" << endl;
     return 0;
 }
 
@@ -58,6 +78,8 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
 int caching_access(const char *path, int mask)
 {
     cout << "access" << endl;
+    access(path, mask);
+    cout << "path: " << *path << endl << "mask: " << mask << endl; // todo remove
     return 0;
 }
 
@@ -77,7 +99,7 @@ int caching_access(const char *path, int mask)
  */
 int caching_open(const char *path, struct fuse_file_info *fi){
     cout << "open" << endl;
-	return 0;
+    return 0;
 }
 
 
@@ -100,8 +122,9 @@ int caching_open(const char *path, struct fuse_file_info *fi){
  * Changed in version 2.2
  */
 int caching_read(const char *path, char *buf, size_t size, 
-				off_t offset, struct fuse_file_info *fi){
-	return 0;
+                off_t offset, struct fuse_file_info *fi){
+    cout << "-- read --" << endl;
+    return 0;
 }
 
 /** Possibly flush cached data
@@ -129,6 +152,7 @@ int caching_read(const char *path, char *buf, size_t size,
  */
 int caching_flush(const char *path, struct fuse_file_info *fi)
 {
+    cout << "-- flush --" << endl;
     return 0;
 }
 
@@ -147,7 +171,8 @@ int caching_flush(const char *path, struct fuse_file_info *fi)
  * Changed in version 2.2
  */
 int caching_release(const char *path, struct fuse_file_info *fi){
-	return 0;
+    cout << "-- release --" << endl;
+    return 0;
 }
 
 /** Open directory
@@ -158,7 +183,9 @@ int caching_release(const char *path, struct fuse_file_info *fi){
  * Introduced in version 2.3
  */
 int caching_opendir(const char *path, struct fuse_file_info *fi){
-	return 0;
+    cout << "-- opendir --" << endl;
+
+    return 0;
 }
 
 /** Read directory
@@ -175,9 +202,9 @@ int caching_opendir(const char *path, struct fuse_file_info *fi){
  * Introduced in version 2.3
  */
 int caching_readdir(const char *path, void *buf, 
-					fuse_fill_dir_t filler, 
-					off_t offset, struct fuse_file_info *fi){
-	return 0;
+                    fuse_fill_dir_t filler,
+                    off_t offset, struct fuse_file_info *fi){
+    return 0;
 }
 
 /** Release directory
@@ -185,12 +212,12 @@ int caching_readdir(const char *path, void *buf,
  * Introduced in version 2.3
  */
 int caching_releasedir(const char *path, struct fuse_file_info *fi){
-	return 0;
+    return 0;
 }
 
 /** Rename a file */
 int caching_rename(const char *path, const char *newpath){
-	return 0;
+    return 0;
 }
 
 /**
@@ -209,7 +236,7 @@ For your task, the function needs to return NULL always
  * Changed in version 2.6
  */
 void *caching_init(struct fuse_conn_info *conn){
-	return NULL;
+    return NULL;
 }
 
 
@@ -242,8 +269,8 @@ void caching_destroy(void *userdata){
  * Introduced in version 2.8
  */
 int caching_ioctl (const char *, int cmd, void *arg,
-		struct fuse_file_info *, unsigned int flags, void *data){
-	return 0;
+        struct fuse_file_info *, unsigned int flags, void *data){
+    return 0;
 }
 
 
@@ -252,58 +279,58 @@ int caching_ioctl (const char *, int cmd, void *arg,
 void init_caching_oper()
 {
 
-	caching_oper.getattr = caching_getattr;
-	caching_oper.access = caching_access;
-	caching_oper.open = caching_open;
-	caching_oper.read = caching_read;
-	caching_oper.flush = caching_flush;
-	caching_oper.release = caching_release;
-	caching_oper.opendir = caching_opendir;
-	caching_oper.readdir = caching_readdir;
-	caching_oper.releasedir = caching_releasedir;
-	caching_oper.rename = caching_rename;
-	caching_oper.init = caching_init;
-	caching_oper.destroy = caching_destroy;
-	caching_oper.ioctl = caching_ioctl;
-	caching_oper.fgetattr = caching_fgetattr;
+    caching_oper.getattr = caching_getattr;
+    caching_oper.access = caching_access;
+    caching_oper.open = caching_open;
+    caching_oper.read = caching_read;
+    caching_oper.flush = caching_flush;
+    caching_oper.release = caching_release;
+    caching_oper.opendir = caching_opendir;
+    caching_oper.readdir = caching_readdir;
+    caching_oper.releasedir = caching_releasedir;
+    caching_oper.rename = caching_rename;
+    caching_oper.init = caching_init;
+    caching_oper.destroy = caching_destroy;
+    caching_oper.ioctl = caching_ioctl;
+    caching_oper.fgetattr = caching_fgetattr;
 
 
-	caching_oper.readlink = NULL;
-	caching_oper.getdir = NULL;
-	caching_oper.mknod = NULL;
-	caching_oper.mkdir = NULL;
-	caching_oper.unlink = NULL;
-	caching_oper.rmdir = NULL;
-	caching_oper.symlink = NULL;
-	caching_oper.link = NULL;
-	caching_oper.chmod = NULL;
-	caching_oper.chown = NULL;
-	caching_oper.truncate = NULL;
-	caching_oper.utime = NULL;
-	caching_oper.write = NULL;
-	caching_oper.statfs = NULL;
-	caching_oper.fsync = NULL;
-	caching_oper.setxattr = NULL;
-	caching_oper.getxattr = NULL;
-	caching_oper.listxattr = NULL;
-	caching_oper.removexattr = NULL;
-	caching_oper.fsyncdir = NULL;
-	caching_oper.create = NULL;
-	caching_oper.ftruncate = NULL;
+    caching_oper.readlink = NULL;
+    caching_oper.getdir = NULL;
+    caching_oper.mknod = NULL;
+    caching_oper.mkdir = NULL;
+    caching_oper.unlink = NULL;
+    caching_oper.rmdir = NULL;
+    caching_oper.symlink = NULL;
+    caching_oper.link = NULL;
+    caching_oper.chmod = NULL;
+    caching_oper.chown = NULL;
+    caching_oper.truncate = NULL;
+    caching_oper.utime = NULL;
+    caching_oper.write = NULL;
+    caching_oper.statfs = NULL;
+    caching_oper.fsync = NULL;
+    caching_oper.setxattr = NULL;
+    caching_oper.getxattr = NULL;
+    caching_oper.listxattr = NULL;
+    caching_oper.removexattr = NULL;
+    caching_oper.fsyncdir = NULL;
+    caching_oper.create = NULL;
+    caching_oper.ftruncate = NULL;
 }
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
 
-	init_caching_oper();
-	argv[1] = argv[2];
-	for (int i = 2; i< (argc - 1); i++){
-		argv[i] = NULL;
-	}
+    init_caching_oper();
+    argv[1] = argv[2];
+    for (int i = 2; i< (argc - 1); i++){
+        argv[i] = NULL;
+    }
         argv[2] = (char*) "-s";
         argv[3] = (char*) "-f"; // todo remove before submission
-	argc = 4;
+    argc = 4;
 
-	int fuse_stat = fuse_main(argc, argv, &caching_oper, NULL);
-	return fuse_stat;
+    int fuse_stat = fuse_main(argc, argv, &caching_oper, NULL);
+    return fuse_stat;
 }

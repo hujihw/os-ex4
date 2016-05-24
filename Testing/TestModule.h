@@ -12,6 +12,8 @@
 class TestModule {
 public:
     void getattrTest();
+    void accessTest();
+    void opendirTest();
 };
 
 
