@@ -10,6 +10,8 @@
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
+#include <limits.h>
+#include <dirent.h>
 
 using namespace std;
 
@@ -28,7 +30,7 @@ void set_root_dir(char *root_dir) {
     rootDir = root_dir;
 }
 
-void caching_get_absolute_path(char absPath[PATH_MAX], const char *path) {
+void caching_absolute_path(char absPath[PATH_MAX], const char *path) {
     strcpy(absPath, rootDir);
     strncat(absPath, path, PATH_MAX);
 }
@@ -185,6 +187,21 @@ int caching_release(const char *path, struct fuse_file_info *fi){
 int caching_opendir(const char *path, struct fuse_file_info *fi){
     cout << "-- opendir --" << endl;
 
+    // get full path from path
+    char fullPath[PATH_MAX];
+    caching_absolute_path(fullPath, path);
+
+    // get DIR* from path
+    DIR *dp = opendir(fullPath);
+
+    if (dp == NULL)
+    {
+        return -errno;
+    }
+
+    // init fi->fh with the DIR*
+    fi->fh = (uint64_t) dp;
+
     return 0;
 }
 
@@ -204,7 +221,50 @@ int caching_opendir(const char *path, struct fuse_file_info *fi){
 int caching_readdir(const char *path, void *buf, 
                     fuse_fill_dir_t filler,
                     off_t offset, struct fuse_file_info *fi){
-    return 0;
+    cout << "-- readdir --" << endl;
+
+    (void) offset;
+
+    cout << "readdir" << endl; // todo remove
+
+    int res = 0;
+    DIR *dirPointer;
+    struct dirent *dirEnt;
+
+    dirPointer = (DIR *) fi->fh;
+
+    dirEnt = readdir(dirPointer);
+
+    if (dirEnt == 0)
+    {
+        res = -errno;
+        return res;
+    }
+
+    char fullDirPath[PATH_MAX];
+    caching_absolute_path(fullDirPath, path);
+
+    cout << "fullDirPath: " << fullDirPath << endl; // todo remove
+
+//    filler(buf, ".", NULL, 0);
+//    filler(buf, "..", NULL, 0);
+//    filler(buf, "/a_file.txt", NULL, 0);
+
+    while ((dirEnt = readdir(dirPointer)) != NULL)
+    {
+        if (dirEnt->d_name == "..") {
+            break;
+        }
+
+        cout << "d_name: " << dirEnt->d_name << endl; // todo remove
+        if (filler(buf, fullDirPath, NULL, 0))
+        {
+            cout << "error" << endl;
+            return -ENOMEM;
+        }
+    }
+
+    return res;
 }
 
 /** Release directory
@@ -323,6 +383,9 @@ void init_caching_oper()
 int main(int argc, char* argv[]){
 
     init_caching_oper();
+
+    set_root_dir(argv[1]);
+
     argv[1] = argv[2];
     for (int i = 2; i< (argc - 1); i++){
         argv[i] = NULL;
