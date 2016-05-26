@@ -26,7 +26,6 @@ void set_root_dir(char *root_dir) {
     if (*((string) root_dir).end() != '/') {
         ((string) root_dir) += '/';
     }
-
     rootDir = root_dir;
 }
 
@@ -42,7 +41,7 @@ void caching_absolute_path(char absPath[PATH_MAX], const char *path) {
  * mount option is given.
  */
 int caching_getattr(const char *path, struct stat *statbuf){
-    cout << "--getattr--" << endl; // todo remove
+    cout << "-- getattr --" << endl; // todo remove
     int return_value = stat(path, statbuf);
     cout << "path: " << *path << endl << "st_dev: " << statbuf->st_dev << endl; // todo remove
     return return_value;
@@ -252,9 +251,8 @@ int caching_readdir(const char *path, void *buf,
 
     while ((dirEnt = readdir(dirPointer)) != NULL)
     {
-        if (dirEnt->d_name == "..") {
-            break;
-        }
+//        struct stat st;
+//        st.
 
         cout << "d_name: " << dirEnt->d_name << endl; // todo remove
         if (filler(buf, fullDirPath, NULL, 0))
@@ -272,6 +270,12 @@ int caching_readdir(const char *path, void *buf,
  * Introduced in version 2.3
  */
 int caching_releasedir(const char *path, struct fuse_file_info *fi){
+    cout << " -- releasedir -- " << endl;
+
+    uint64_t dp = fi->fh;
+    (void) path;
+    closedir((DIR *) dp);
+
     return 0;
 }
 

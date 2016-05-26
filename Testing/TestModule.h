@@ -11,9 +11,15 @@
  */
 class TestModule {
 public:
+    void zeroErrno();
+
     void getattrTest();
+
     void accessTest();
+
     void opendirTest();
+
+    void readdirTest();
 };
 
 
