@@ -10,7 +10,7 @@
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
-#include <limits.h>
+//#include <limits.h>
 #include <dirent.h>
 
 using namespace std;
@@ -42,9 +42,13 @@ void caching_absolute_path(char absPath[PATH_MAX], const char *path) {
  */
 int caching_getattr(const char *path, struct stat *statbuf){
     cout << "-- getattr --" << endl; // todo remove
-    int return_value = stat(path, statbuf);
-    cout << "path: " << *path << endl << "st_dev: " << statbuf->st_dev << endl; // todo remove
-    return return_value;
+    cout << "++path: " << path << endl; // todo remove
+
+    char full_path[PATH_MAX];
+    caching_absolute_path(full_path, path);
+
+    int res = lstat(full_path, statbuf);
+    return res;
 }
 
 /**
@@ -59,7 +63,7 @@ int caching_getattr(const char *path, struct stat *statbuf){
  *
  * Introduced in version 2.5
  */
-int caching_fgetattr(const char *path, struct stat *statbuf, 
+int caching_fgetattr(const char *path, struct stat *statbuf,
                     struct fuse_file_info *fi){
     cout << "-- fgetattr --" << endl;
     return 0;
@@ -79,9 +83,10 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
 int caching_access(const char *path, int mask)
 {
     cout << "access" << endl;
-    access(path, mask);
+    int res;
+    res = access(path, mask);
     cout << "path: " << *path << endl << "mask: " << mask << endl; // todo remove
-    return 0;
+    return res;
 }
 
 
@@ -90,7 +95,7 @@ int caching_access(const char *path, int mask)
  * No creation, or truncation flags (O_CREAT, O_EXCL, O_TRUNC)
  * will be passed to open().  Open should check if the operation
  * is permitted for the given flags.  Optionally open may also
- * initialize an arbitrary filehandle (fh) in the fuse_file_info 
+ * initialize an arbitrary filehandle (fh) in the fuse_file_info
  * structure, which will be passed to all file operations.
 
  * pay attention that the max allowed path is PATH_MAX (in limits.h).
@@ -108,21 +113,21 @@ int caching_open(const char *path, struct fuse_file_info *fi){
  *
  * Read should return exactly the number of bytes requested except
  * on EOF or error. For example, if you receive size=100, offest=0,
- * but the size of the file is 10, you will init only the first 
+ * but the size of the file is 10, you will init only the first
    ten bytes in the buff and return the number 10.
-   
-   In order to read a file from the disk, 
+
+   In order to read a file from the disk,
    we strongly advise you to use "pread" rather than "read".
-   Pay attention, in pread the offset is valid as long it is 
+   Pay attention, in pread the offset is valid as long it is
    a multipication of the block size.
-   More specifically, pread returns 0 for negative offset 
+   More specifically, pread returns 0 for negative offset
    and an offset after the end of the file
    (as long as the the rest of the requirements are fulfiiled).
    You are suppose to preserve this behavior also in your implementation.
 
  * Changed in version 2.2
  */
-int caching_read(const char *path, char *buf, size_t size, 
+int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     cout << "-- read --" << endl;
     return 0;
@@ -217,14 +222,13 @@ int caching_opendir(const char *path, struct fuse_file_info *fi){
  *
  * Introduced in version 2.3
  */
-int caching_readdir(const char *path, void *buf, 
+int caching_readdir(const char *path, void *buf,
                     fuse_fill_dir_t filler,
                     off_t offset, struct fuse_file_info *fi){
     cout << "-- readdir --" << endl;
 
     (void) offset;
-
-    cout << "readdir" << endl; // todo remove
+//    (void) fi;
 
     int res = 0;
     DIR *dirPointer;
@@ -251,18 +255,23 @@ int caching_readdir(const char *path, void *buf,
 
     while ((dirEnt = readdir(dirPointer)) != NULL)
     {
-//        struct stat st;
-//        st.
+        struct stat st;
+        memset(&st, 0, sizeof(st));
+        st.st_ino = dirEnt->d_ino;
+        st.st_mode = dirEnt->d_type << 12;
+        if (filler(buf, dirEnt->d_name, &st, 0))
+            break;
 
         cout << "d_name: " << dirEnt->d_name << endl; // todo remove
-        if (filler(buf, fullDirPath, NULL, 0))
-        {
-            cout << "error" << endl;
-            return -ENOMEM;
-        }
+//        if (filler(buf, dirEnt->d_name, NULL, 0))
+//        {
+//            cout << "error" << endl;
+//            return -ENOMEM;
+//        }
     }
 
     return res;
+//    return 0;
 }
 
 /** Release directory
@@ -281,6 +290,7 @@ int caching_releasedir(const char *path, struct fuse_file_info *fi){
 
 /** Rename a file */
 int caching_rename(const char *path, const char *newpath){
+    cout << "-- rename --" << endl; // todo remove
     return 0;
 }
 
@@ -291,15 +301,16 @@ int caching_rename(const char *path, const char *newpath){
  * fuse_context to all file operations and as a parameter to the
  * destroy() method.
  *
- 
-If a failure occurs in this function, do nothing (absorb the failure 
-and don't report it). 
-For your task, the function needs to return NULL always 
+
+If a failure occurs in this function, do nothing (absorb the failure
+and don't report it).
+For your task, the function needs to return NULL always
 (if you do something else, be sure to use the fuse_context correctly).
  * Introduced in version 2.3
  * Changed in version 2.6
  */
 void *caching_init(struct fuse_conn_info *conn){
+    cout << "-- init --" << endl; // todo remove
     return NULL;
 }
 
@@ -308,13 +319,14 @@ void *caching_init(struct fuse_conn_info *conn){
  * Clean up filesystem
  *
  * Called on filesystem exit.
-  
-If a failure occurs in this function, do nothing 
-(absorb the failure and don't report it). 
- 
+
+If a failure occurs in this function, do nothing
+(absorb the failure and don't report it).
+
  * Introduced in version 2.3
  */
 void caching_destroy(void *userdata){
+    cout << "-- destroy --" << endl; // todo remove
 }
 
 
@@ -327,18 +339,19 @@ void caching_destroy(void *userdata){
  * _IOC_READ in area and if both are set in/out area.  In all
  * non-NULL cases, the area is of _IOC_SIZE(cmd) bytes.
  *
- * However, in our case, this function only needs to print 
+ * However, in our case, this function only needs to print
  cache table to the log file .
- * 
+ *
  * Introduced in version 2.8
  */
 int caching_ioctl (const char *, int cmd, void *arg,
         struct fuse_file_info *, unsigned int flags, void *data){
+    cout << "-- ioctl --" << endl; // todo remove
     return 0;
 }
 
 
-// Initialise the operations. 
+// Initialise the operations.
 // You are not supposed to change this function.
 void init_caching_oper()
 {
