@@ -10,7 +10,6 @@
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
-//#include <limits.h>
 #include <dirent.h>
 
 using namespace std;

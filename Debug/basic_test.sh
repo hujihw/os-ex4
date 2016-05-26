@@ -10,7 +10,8 @@ MOUNTDIR=$BIN_PATH/mount_dir
 # unmount the last mount
 fusermount -u -q /media/sf_huji/courses/os/hw/ex4/Debug/mount_dir
 
-$BIN_PATH/CachingFileSystem $ROOTDIR $MOUNTDIR
+# $BIN_PATH/CachingFileSystem $ROOTDIR $MOUNTDIR
+valgrind $BIN_PATH/CachingFileSystem $ROOTDIR $MOUNTDIR
 
 # make sure nothing stays mounted
 fusermount -u /media/sf_huji/courses/os/hw/ex4/Debug/mount_dir

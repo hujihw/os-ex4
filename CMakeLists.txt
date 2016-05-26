@@ -3,7 +3,7 @@ project(ex4)
 INCLUDE(FindPkgConfig)
 
 # set the sources, flags and executable name
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g")
 set(SOURCE_FILES CachingFileSystem.cpp)
 add_executable(CachingFileSystem ${SOURCE_FILES})
 
