@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <iostream>
 #include "TestModule.h"
+#include "../CachingFileSystem.cpp"
 
 // todo save errno to another variable before printing
 

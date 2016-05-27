@@ -15,6 +15,7 @@
 using namespace std;
 
 char *rootDir;
+FILE *logfile;
 
 struct fuse_operations caching_oper;
 
@@ -104,7 +105,13 @@ int caching_access(const char *path, int mask)
  */
 int caching_open(const char *path, struct fuse_file_info *fi){
     cout << "open" << endl;
-    return 0;
+
+    char fpath[PATH_MAX];
+    caching_absolute_path(fpath, path);
+
+    int res = open(fpath, fi->flags);
+
+    return res;
 }
 
 
@@ -395,6 +402,8 @@ void init_caching_oper()
     caching_oper.ftruncate = NULL;
 }
 
+#ifndef EX4_TESTMODULE_H
+
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
 
@@ -413,3 +422,5 @@ int main(int argc, char* argv[]){
     int fuse_stat = fuse_main(argc, argv, &caching_oper, NULL);
     return fuse_stat;
 }
+
+#endif // EX4_TESTMODULE_H
