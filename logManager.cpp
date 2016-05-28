@@ -8,10 +8,10 @@ FILE *open_log(char *logfile) {
     FILE *logFile;
 
 
-    logFile = fopen(logfile, "a");
+    logFile = fopen(logfile, "w");
     std::cout << "creating log file: " << logfile << std::endl;
     if (logFile == nullptr){
-        perror("logfile");
+        perror("Logfile not created");
         // todo exit?
     }
 

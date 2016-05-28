@@ -7,33 +7,38 @@
 #define FUSE_USE_VERSION 26
 
 #include <iostream>
+#include <stdio.h>
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
 #include <dirent.h>
+#include <limits.h>
+#include <stdlib.h>
 #include "logManager.h"
+
+#define CF_LOG ((struct cfs_state *) fuse_get_context()->private_data)
 
 using namespace std;
 
 char *rootDir;
 FILE *logfile;
-char logfile_name[PATH_MAX] = "filesystem.log";
+char logfile_name[PATH_MAX] = "/tmp/ex4/Debug/root_dir/filesystem.log";
 
 struct fuse_operations caching_oper;
 
 /**
  * @brief Sets the root dir of the current run
  */
-void set_root_dir(char *root_dir) {
-    if (*((string) root_dir).end() != '/') {
-        ((string) root_dir) += '/';
-    }
-//    CF_LOG->rootdir = realpath(root_dir, NULL);
-//    cout << "rootdir: " << CF_LOG->rootdir << endl;
-    rootDir = root_dir;
+void set_root_dir(char *root_dir, cfs_state *state)
+{
+    state->rootdir = realpath(root_dir, NULL);
+    cout << "rootdir: " << state->rootdir << endl;
 }
 
-void caching_absolute_path(char absPath[PATH_MAX], const char *path) {
+void caching_absolute_path(char *absPath, const char *path) {
+    cout << "absPath: " << absPath << endl;
+//    strcpy(absPath, CF_LOG->rootdir);
+//    strncat(absPath, path, PATH_MAX);
     strcpy(absPath, rootDir);
     strncat(absPath, path, PATH_MAX);
 }
@@ -88,7 +93,10 @@ int caching_access(const char *path, int mask)
 {
     cout << "access" << endl;
     int res;
-    res = access(path, mask);
+    char *full_path = new char[PATH_MAX];
+    caching_absolute_path(full_path, path);
+    log_call("access");
+    res = access(full_path, mask);
     cout << "path: " << *path << endl << "mask: " << mask << endl; // todo remove
     return res;
 }
@@ -410,15 +418,22 @@ void init_caching_oper()
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
-    struct cfs_state cfs_st;
+    struct cfs_state *cfs_st = new cfs_state();
 
     init_caching_oper();
 
-    set_root_dir(argv[1]);
+//    char path_buffer[PATH_MAX];
+//    set_root_dir(argv[1], cfs_st);
+    rootDir = realpath(argv[1], NULL);
+//    cfs_st->rootdir = realpath(argv[1], NULL);
+//    cout << "root dir: " << rootDir << endl;
 
-    char logfile_full_path[PATH_MAX];
-    caching_absolute_path(logfile_full_path, logfile_name);
-    logfile = open_log(logfile_full_path);
+//    char log_full_path[PATH_MAX];
+//    strcpy(log_full_path, cfs_st->rootdir);
+//    strncat(log_full_path, logfile_name, PATH_MAX);
+
+//    cfs_st->logfile = open_log(log_full_path);
+    logfile = open_log(logfile_name);
 
     argv[1] = argv[2];
     for (int i = 2; i< (argc - 1); i++){
@@ -428,7 +443,10 @@ int main(int argc, char* argv[]){
         argv[3] = (char*) "-f"; // todo remove before submission
     argc = 4;
 
-    int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
+    int fuse_stat = fuse_main(argc, argv, &caching_oper, cfs_st);
+
+    delete cfs_st;
+
     return fuse_stat;
 }
 

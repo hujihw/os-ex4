@@ -16,6 +16,12 @@ struct cfs_state {
 };
 #define CF_LOG ((struct cfs_state *) fuse_get_context()->private_data)
 
+//struct bb_state {
+//    FILE *logfile;
+//    char *rootdir;
+//};
+//#define BB_DATA ((struct bb_state *) fuse_get_context()->private_data) // todo remove
+
 /**
  * @brief Open the log file to write the operations done
  */
