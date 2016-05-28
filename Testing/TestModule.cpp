@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <iostream>
 #include "TestModule.h"
-#include "../CachingFileSystem.cpp"
+#include "/home/omri/os/os-ex4/CachingFileSystem.cpp"
 
 // todo save errno to another variable before printing
 
@@ -22,12 +22,12 @@ void TestModule::getattrTest() {
     struct stat *stat_buf = new struct stat;
 
     // test on an existing file
-    int res = stat("/", stat_buf);
+    int res = stat("mount_dir", stat_buf);
     std::cout << "expect 0: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     // test file that doesn't exist
-    res = stat("/no_such_file", stat_buf);
+    res = stat("no_such_file", stat_buf);
     std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }
@@ -39,12 +39,12 @@ void TestModule::accessTest() {
     zeroErrno();
 
     // test on an existing file
-    int res = access("/", F_OK);
+    int res = access("mount_dir", F_OK);
     std::cout << "expect 0: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     // test file that doesn't exist
-    res = access("/no_such_file", F_OK);
+    res = access("no_such_file", F_OK);
     std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }
@@ -58,7 +58,7 @@ void TestModule::opendirTest() {
     // test on an existing file
     DIR *pdir;
 
-    pdir = opendir("/");
+    pdir = opendir("mount_dir");
     std::cout << "expect a large integer: " << (uint64_t) pdir << std::endl;
     std::cout << "errno: " << errno << std::endl;
 

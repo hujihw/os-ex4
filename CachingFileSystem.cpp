@@ -11,11 +11,13 @@
 #include <unistd.h>
 #include <memory.h>
 #include <dirent.h>
+#include "logManager.h"
 
 using namespace std;
 
 char *rootDir;
 FILE *logfile;
+char logfile_name[PATH_MAX] = "filesystem.log";
 
 struct fuse_operations caching_oper;
 
@@ -26,6 +28,8 @@ void set_root_dir(char *root_dir) {
     if (*((string) root_dir).end() != '/') {
         ((string) root_dir) += '/';
     }
+//    CF_LOG->rootdir = realpath(root_dir, NULL);
+//    cout << "rootdir: " << CF_LOG->rootdir << endl;
     rootDir = root_dir;
 }
 
@@ -406,10 +410,15 @@ void init_caching_oper()
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
+    struct cfs_state cfs_st;
 
     init_caching_oper();
 
     set_root_dir(argv[1]);
+
+    char logfile_full_path[PATH_MAX];
+    caching_absolute_path(logfile_full_path, logfile_name);
+    logfile = open_log(logfile_full_path);
 
     argv[1] = argv[2];
     for (int i = 2; i< (argc - 1); i++){
@@ -419,7 +428,7 @@ int main(int argc, char* argv[]){
         argv[3] = (char*) "-f"; // todo remove before submission
     argc = 4;
 
-    int fuse_stat = fuse_main(argc, argv, &caching_oper, NULL);
+    int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
     return fuse_stat;
 }
 
