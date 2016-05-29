@@ -5,6 +5,8 @@
 
 //#include "CachingFileSystem.h"
 #include <iostream>
+#include <string>
+#include <stdarg.h>
 #include <stdio.h>
 
 /**
@@ -30,7 +32,7 @@ FILE *open_log(char *logfile);
 /**
  * @brief A function to log the system calls done by the filesystem
  */
-void log_call(const char *callName);
+void log_call(const char *callName, ...);
 
 //class LogManager {
 //public:

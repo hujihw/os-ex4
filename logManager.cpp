@@ -18,8 +18,23 @@ FILE *open_log(char *logfile) {
     return logFile;
 }
 
-void log_call(const char *callName) {
-    time_t callTime;
-    time(&callTime);
-    fprintf((CF_LOG->logfile), "%li %s", callTime, callName);
+void log_call(const char *callName, ...) {
+    va_list ap;
+    va_start(ap, callName);
+
+    vfprintf(CF_LOG->logfile, callName, ap);
+
+//    time_t callTime;
+//    time(&callTime);
+//
+//
+//    fprintf((CF_LOG->logfile), "%li %s", callTime, callName);
+
+//    void log_msg(const char *format, ...)
+//    {
+//        va_list ap;
+//        va_start(ap, format);
+//
+//        vfprintf(BB_DATA->logfile, format, ap);
+//    }
 }
