@@ -16,13 +16,13 @@
 #include <stdlib.h>
 #include "logManager.h"
 
-#define CF_LOG ((struct cfs_state *) fuse_get_context()->private_data)
+//#define CF_LOG ((struct cfs_state *) fuse_get_context()->private_data)
 
 using namespace std;
 
 char *rootDir;
 FILE *logfile;
-char logfile_name[PATH_MAX] = "/tmp/ex4/Debug/root_dir/filesystem.log";
+char logfile_name[PATH_MAX] = "/filesystem.log";
 
 struct fuse_operations caching_oper;
 
@@ -37,9 +37,7 @@ void set_root_dir(char *root_dir, cfs_state *state)
 
 void caching_absolute_path(char *absPath, const char *path) {
     cout << "absPath: " << absPath << endl;
-//    strcpy(absPath, CF_LOG->rootdir);
-//    strncat(absPath, path, PATH_MAX);
-    strcpy(absPath, rootDir);
+    strcpy(absPath, CF_LOG->rootdir);
     strncat(absPath, path, PATH_MAX);
 }
 
@@ -329,7 +327,8 @@ For your task, the function needs to return NULL always
  */
 void *caching_init(struct fuse_conn_info *conn){
     cout << "-- init --" << endl; // todo remove
-    return NULL;
+    fuse_get_context();
+    return CF_LOG;
 }
 
 
@@ -418,22 +417,18 @@ void init_caching_oper()
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
-    struct cfs_state *cfs_st = new cfs_state();
+    struct cfs_state *cfs_st; // todo fix compilation error
 
     init_caching_oper();
 
-//    char path_buffer[PATH_MAX];
-//    set_root_dir(argv[1], cfs_st);
+    set_root_dir(argv[1], cfs_st);
     rootDir = realpath(argv[1], NULL);
-//    cfs_st->rootdir = realpath(argv[1], NULL);
-//    cout << "root dir: " << rootDir << endl;
 
-//    char log_full_path[PATH_MAX];
-//    strcpy(log_full_path, cfs_st->rootdir);
-//    strncat(log_full_path, logfile_name, PATH_MAX);
+    char log_full_path[PATH_MAX];
+    strcpy(log_full_path, cfs_st->rootdir);
+    strncat(log_full_path, logfile_name, PATH_MAX);
 
-//    cfs_st->logfile = open_log(log_full_path);
-    logfile = open_log(logfile_name);
+    cfs_st->logfile = open_log(log_full_path);
 
     argv[1] = argv[2];
     for (int i = 2; i< (argc - 1); i++){
@@ -444,8 +439,6 @@ int main(int argc, char* argv[]){
     argc = 4;
 
     int fuse_stat = fuse_main(argc, argv, &caching_oper, cfs_st);
-
-    delete cfs_st;
 
     return fuse_stat;
 }
