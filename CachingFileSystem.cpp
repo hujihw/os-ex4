@@ -48,12 +48,13 @@ void caching_absolute_path(char *absPath, const char *path) {
  * mount option is given.
  */
 int caching_getattr(const char *path, struct stat *statbuf){
-    cout << "-- getattr --" << endl; // todo remove
+    cout << "   -- getattr --" << endl; // todo remove
     cout << "++path: " << path << endl; // todo remove
 
     char full_path[PATH_MAX];
     caching_absolute_path(full_path, path);
 
+    log_call("lstat");
     int res = lstat(full_path, statbuf);
     return res;
 }
@@ -89,7 +90,7 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
  */
 int caching_access(const char *path, int mask)
 {
-    cout << "access" << endl;
+    cout << "    -- access --" << endl; // todo remove
     int res;
     char *full_path = new char[PATH_MAX];
     caching_absolute_path(full_path, path);
@@ -114,11 +115,12 @@ int caching_access(const char *path, int mask)
  * Changed in version 2.2
  */
 int caching_open(const char *path, struct fuse_file_info *fi){
-    cout << "open" << endl;
+    cout << "    -- open -- " << endl;
 
     char fpath[PATH_MAX];
     caching_absolute_path(fpath, path);
 
+    log_call("open");
     int res = open(fpath, fi->flags);
 
     return res;

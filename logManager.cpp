@@ -1,14 +1,11 @@
 // LogManager.cpp
 
 #include "logManager.h"
-#include <time.h>
-#include <fuse.h>
 
 FILE *open_log(char *logfile) {
     FILE *logFile;
 
-
-    logFile = fopen(logfile, "w");
+    logFile = fopen(logfile, "a");
     std::cout << "creating log file: " << logfile << std::endl;
     if (logFile == nullptr){
         perror("Logfile not created");
@@ -18,23 +15,9 @@ FILE *open_log(char *logfile) {
     return logFile;
 }
 
-void log_call(const char *callName, ...) {
-    va_list ap;
-    va_start(ap, callName);
+void log_call(const char *callName) {
+    time_t callTime;
+    time(&callTime);
 
-    vfprintf(CF_LOG->logfile, callName, ap);
-
-//    time_t callTime;
-//    time(&callTime);
-//
-//
-//    fprintf((CF_LOG->logfile), "%li %s", callTime, callName);
-
-//    void log_msg(const char *format, ...)
-//    {
-//        va_list ap;
-//        va_start(ap, format);
-//
-//        vfprintf(BB_DATA->logfile, format, ap);
-//    }
+    fprintf((CF_LOG->logfile), "%li %s\n", callTime, callName);
 }
