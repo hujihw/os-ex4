@@ -1,3 +1,4 @@
+
 // LogManager.h
 
 #ifndef EX4_LOGMANAGER_H
@@ -13,6 +14,9 @@
  * @brief A struct to maintain the state of the system.
  * Important but not documented: MUST initialize in the init function in order
  * to use this struct during the filesystem operation.
+ *
+ * @ logFile - A pointer to the log file of the file system.
+ * @ rootDir - A pointer to the name of the root directory.
  */
 struct cfs_state {
     FILE *logfile;

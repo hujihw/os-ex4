@@ -4,7 +4,7 @@ INCLUDE(FindPkgConfig)
 
 # set the sources, flags and executable name
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g")
-set(SOURCE_FILES CachingFileSystem.cpp logManager.cpp logManager.h)
+set(SOURCE_FILES CachingFileSystem.cpp CachingFileSystem.h logManager.cpp logManager.h)
 add_executable(CachingFileSystem ${SOURCE_FILES})
 
 # use pkg-config to configure fuse compilation
@@ -17,5 +17,5 @@ endif (${FUSE_FOUND})
 
 
 # recipe for testing file
-#set(SOURCE_FILES Testing/TestModule.cpp Testing/TestModule.h)
-#add_executable(TestModule ${SOURCE_FILES})
+set(SOURCE_FILES Testing/TestModule.cpp Testing/TestModule.h)
+add_executable(TestModule ${SOURCE_FILES})

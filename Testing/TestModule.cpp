@@ -3,9 +3,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <iostream>
 #include "TestModule.h"
-#include "/home/omri/huji/courses/os/hw/os-ex4/CachingFileSystem.cpp"
 
 // todo save errno to another variable before printing
 
@@ -23,6 +23,7 @@ void TestModule::getattrTest() {
 
     // test on an existing file
     int res = stat("mount_dir", stat_buf);
+
     std::cout << "expect 0: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
@@ -87,15 +88,43 @@ void TestModule::readdirTest() {
     std::cout << "errno: " << errno << std::endl;
 }
 
+void TestModule::openTest() {
+    std::cout << " -- open test -- " << std::endl;
 
-int main() {
-    TestModule *tester = new TestModule();
+    zeroErrno();
 
-    // run tests
-    tester->getattrTest();
-    tester->accessTest();
-    tester->opendirTest();
-    tester->readdirTest();
+    int res;
+
+    // test on an existing file
+    res = open("mount_dir/a_file.txt", O_TRUNC);
+    std::cout << "expect a small integer: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    zeroErrno();
+
+    // test on non existing file
+    res = open("mount_dir/open_a_file.txt", O_TRUNC);
+    std::cout << "expect a small integer: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    zeroErrno();
+
+    // test on file that cannot be created
+    res = open("/cant_open_a_file.txt", O_TRUNC);
+    std::cout << "expect -1: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+}
+
+
+int main ()
+{
+    TestModule testModule;
+
+    testModule.accessTest();
+    testModule.getattrTest();
+    testModule.readdirTest();
+    testModule.opendirTest();
+    testModule.openTest();
 
     return 0;
 }

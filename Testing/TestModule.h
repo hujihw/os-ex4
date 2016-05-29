@@ -20,6 +20,8 @@ public:
     void opendirTest();
 
     void readdirTest();
+
+    void openTest();
 };
 
 

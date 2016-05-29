@@ -6,17 +6,14 @@
 
 #define FUSE_USE_VERSION 26
 
-#include <iostream>
-#include <stdio.h>
+
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
 #include <dirent.h>
-#include <limits.h>
-#include <stdlib.h>
+#include <fuse.h>
 #include "logManager.h"
-
-//#define CF_LOG ((struct cfs_state *) fuse_get_context()->private_data)
+#include "CachingFileSystem.h"
 
 using namespace std;
 
@@ -35,7 +32,11 @@ void set_root_dir(char *root_dir, cfs_state *state)
     cout << "rootdir: " << state->rootdir << endl;
 }
 
-void caching_absolute_path(char *absPath, const char *path) {
+/**
+ * @brief Get the full path of the file,
+ * related to the root of the FUSE filesystem
+ */
+void caching_full_path(char *absPath, const char *path) {
     cout << "absPath: " << absPath << endl;
     strcpy(absPath, CF_LOG->rootdir);
     strncat(absPath, path, PATH_MAX);
@@ -52,7 +53,7 @@ int caching_getattr(const char *path, struct stat *statbuf){
     cout << "++path: " << path << endl; // todo remove
 
     char full_path[PATH_MAX];
-    caching_absolute_path(full_path, path);
+    caching_full_path(full_path, path);
 
     log_call("lstat");
     int res = lstat(full_path, statbuf);
@@ -74,7 +75,14 @@ int caching_getattr(const char *path, struct stat *statbuf){
 int caching_fgetattr(const char *path, struct stat *statbuf,
                     struct fuse_file_info *fi){
     cout << "-- fgetattr --" << endl;
-    return 0;
+    cout << "++path: " << path << endl; // todo remove
+
+    char full_path[PATH_MAX];
+    caching_full_path(full_path, path);
+
+    log_call("fstat");
+    int res = fstat((int) fi->fh, statbuf);
+    return res;
 }
 
 /**
@@ -93,7 +101,7 @@ int caching_access(const char *path, int mask)
     cout << "    -- access --" << endl; // todo remove
     int res;
     char *full_path = new char[PATH_MAX];
-    caching_absolute_path(full_path, path);
+    caching_full_path(full_path, path);
     log_call("access");
     res = access(full_path, mask);
     cout << "path: " << *path << endl << "mask: " << mask << endl; // todo remove
@@ -118,7 +126,9 @@ int caching_open(const char *path, struct fuse_file_info *fi){
     cout << "    -- open -- " << endl;
 
     char fpath[PATH_MAX];
-    caching_absolute_path(fpath, path);
+    caching_full_path(fpath, path);
+
+    cout << "flags: " << fi->flags << endl; // todo remove
 
     log_call("open");
     int res = open(fpath, fi->flags);
@@ -211,7 +221,7 @@ int caching_opendir(const char *path, struct fuse_file_info *fi){
 
     // get full path from path
     char fullPath[PATH_MAX];
-    caching_absolute_path(fullPath, path);
+    caching_full_path(fullPath, path);
 
     // get DIR* from path
     DIR *dp = opendir(fullPath);
@@ -263,7 +273,7 @@ int caching_readdir(const char *path, void *buf,
     }
 
     char fullDirPath[PATH_MAX];
-    caching_absolute_path(fullDirPath, path);
+    caching_full_path(fullDirPath, path);
 
     cout << "fullDirPath: " << fullDirPath << endl; // todo remove
 
@@ -415,7 +425,6 @@ void init_caching_oper()
     caching_oper.ftruncate = NULL;
 }
 
-#ifndef EX4_TESTMODULE_H
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
@@ -444,5 +453,3 @@ int main(int argc, char* argv[]){
 
     return fuse_stat;
 }
-
-#endif // EX4_TESTMODULE_H
