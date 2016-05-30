@@ -19,6 +19,7 @@
  * @ rootDir - A pointer to the name of the root directory.
  */
 struct cfs_state {
+    char *logfile_full_path;
     FILE *logfile;
     char *rootdir;
 };

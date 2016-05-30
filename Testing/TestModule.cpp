@@ -7,6 +7,8 @@
 #include <iostream>
 #include "TestModule.h"
 
+#define OPEN_FLAGS O_RDONLY | O_DIRECT | O_SYNC
+
 // todo save errno to another variable before printing
 
 void TestModule::zeroErrno() {
@@ -96,21 +98,21 @@ void TestModule::openTest() {
     int res;
 
     // test on an existing file
-    res = open("mount_dir/a_file.txt", O_TRUNC);
+    res = open("mount_dir/a_file.txt", OPEN_FLAGS);
     std::cout << "expect a small integer: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     zeroErrno();
 
     // test on non existing file
-    res = open("mount_dir/open_a_file.txt", O_TRUNC);
-    std::cout << "expect a small integer: " << res << std::endl;
+    res = open("mount_dir/open_a_file.txt", OPEN_FLAGS);
+    std::cout << "expect -1 (no permissions to create a new file): " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     zeroErrno();
 
     // test on file that cannot be created
-    res = open("/cant_open_a_file.txt", O_TRUNC);
+    res = open("/cant_open_a_file.txt", OPEN_FLAGS);
     std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }

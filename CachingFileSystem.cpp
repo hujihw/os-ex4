@@ -15,10 +15,9 @@
 #include "logManager.h"
 #include "CachingFileSystem.h"
 
-using namespace std;
+#define OPEN_FLAGS O_RDONLY | O_DIRECT | O_SYNC
 
-char *rootDir;
-FILE *logfile;
+using namespace std;
 char logfile_name[PATH_MAX] = "/filesystem.log";
 
 struct fuse_operations caching_oper;
@@ -29,7 +28,6 @@ struct fuse_operations caching_oper;
 void set_root_dir(char *root_dir, cfs_state *state)
 {
     state->rootdir = realpath(root_dir, NULL);
-    cout << "rootdir: " << state->rootdir << endl;
 }
 
 /**
@@ -37,7 +35,6 @@ void set_root_dir(char *root_dir, cfs_state *state)
  * related to the root of the FUSE filesystem
  */
 void caching_full_path(char *absPath, const char *path) {
-    cout << "absPath: " << absPath << endl;
     strcpy(absPath, CF_LOG->rootdir);
     strncat(absPath, path, PATH_MAX);
 }
@@ -54,7 +51,6 @@ int caching_getattr(const char *path, struct stat *statbuf){
 
     char full_path[PATH_MAX];
     caching_full_path(full_path, path);
-
     log_call("lstat");
     int res = lstat(full_path, statbuf);
     return res;
@@ -100,7 +96,7 @@ int caching_access(const char *path, int mask)
 {
     cout << "    -- access --" << endl; // todo remove
     int res;
-    char *full_path = new char[PATH_MAX];
+    char full_path[PATH_MAX];
     caching_full_path(full_path, path);
     log_call("access");
     res = access(full_path, mask);
@@ -128,11 +124,24 @@ int caching_open(const char *path, struct fuse_file_info *fi){
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
-    cout << "flags: " << fi->flags << endl; // todo remove
+    cout << "if flags" << endl; // todo remove
+    if (((fi->flags & 3) == O_WRONLY) || ((fi->flags & 3) == O_RDWR))
+    {
+        cout << "flags..." << endl; // todo remove
+        return -EACCES;
+    }
 
+    cout << "opening..." << endl; // todo remove
+    cout << "fpath: " << fpath << endl; // todo remove
     log_call("open");
-    int res = open(fpath, fi->flags);
+    int res = open(fpath, OPEN_FLAGS); // todo fix "operation not permitted"
 
+    if (res >= 0)
+    {
+        fi->fh = (uint64_t) res;
+    }
+
+    cout << "res: " << res << endl; // todo remove
     return res;
 }
 
@@ -157,7 +166,33 @@ int caching_open(const char *path, struct fuse_file_info *fi){
  */
 int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
-    cout << "-- read --" << endl;
+    cout << "-- read --" << endl; // todo remove
+
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
+
+    // if trying to read the log, return error
+//    if (fpath == )
+    // if offset negative 0, return 0
+    if (offset == 0)
+    {
+        return 0;
+    }
+
+    struct stat st;
+    stat(fpath, &st);
+    int file_size = (int) st.st_size;
+    // if offset > file size, return 0
+    if (offset > file_size)
+    {
+        return 0;
+    }
+
+    // if the file exists in the cache. load it from there todo
+
+    // else read it from the disk
+
+
     return 0;
 }
 
@@ -217,7 +252,9 @@ int caching_release(const char *path, struct fuse_file_info *fi){
  * Introduced in version 2.3
  */
 int caching_opendir(const char *path, struct fuse_file_info *fi){
-    cout << "-- opendir --" << endl;
+    cout << "   -- opendir --" << endl; // todo remove
+
+    cout << "   +++ path: " << path << endl; // todo remove
 
     // get full path from path
     char fullPath[PATH_MAX];
@@ -256,50 +293,37 @@ int caching_readdir(const char *path, void *buf,
     cout << "-- readdir --" << endl;
 
     (void) offset;
-//    (void) fi;
 
     int res = 0;
     DIR *dirPointer;
     struct dirent *dirEnt;
 
+    // get the file handler of the current dir
     dirPointer = (DIR *) fi->fh;
 
-    dirEnt = readdir(dirPointer);
+    cout << "DirPath: " << path << endl; // todo remove
 
-    if (dirEnt == 0)
-    {
-        res = -errno;
-        return res;
-    }
-
-    char fullDirPath[PATH_MAX];
-    caching_full_path(fullDirPath, path);
-
-    cout << "fullDirPath: " << fullDirPath << endl; // todo remove
-
-//    filler(buf, ".", NULL, 0);
-//    filler(buf, "..", NULL, 0);
-//    filler(buf, "/a_file.txt", NULL, 0);
-
+    // read each file in the dir
     while ((dirEnt = readdir(dirPointer)) != NULL)
     {
+        if (dirEnt == 0)
+        {
+            res = -errno;
+            return res;
+        }
+
+        cout << " ## d_name: " << dirEnt->d_name << endl; // todo remove
+
+        // set the properties of every file in the dir
         struct stat st;
         memset(&st, 0, sizeof(st));
         st.st_ino = dirEnt->d_ino;
-        st.st_mode = dirEnt->d_type << 12;
+
         if (filler(buf, dirEnt->d_name, &st, 0))
             break;
-
-        cout << "d_name: " << dirEnt->d_name << endl; // todo remove
-//        if (filler(buf, dirEnt->d_name, NULL, 0))
-//        {
-//            cout << "error" << endl;
-//            return -ENOMEM;
-//        }
     }
 
     return res;
-//    return 0;
 }
 
 /** Release directory
@@ -428,18 +452,18 @@ void init_caching_oper()
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
-    struct cfs_state *cfs_st; // todo fix compilation error
+    struct cfs_state cfs_st; // todo fix compilation error
 
     init_caching_oper();
 
-    set_root_dir(argv[1], cfs_st);
-    rootDir = realpath(argv[1], NULL);
+    set_root_dir(argv[1], &cfs_st);
 
     char log_full_path[PATH_MAX];
-    strcpy(log_full_path, cfs_st->rootdir);
+    strcpy(log_full_path, cfs_st.rootdir);
     strncat(log_full_path, logfile_name, PATH_MAX);
+    cfs_st.logfile_full_path = log_full_path;
 
-    cfs_st->logfile = open_log(log_full_path);
+    cfs_st.logfile = open_log(log_full_path);
 
     argv[1] = argv[2];
     for (int i = 2; i< (argc - 1); i++){
@@ -449,7 +473,9 @@ int main(int argc, char* argv[]){
         argv[3] = (char*) "-f"; // todo remove before submission
     argc = 4;
 
-    int fuse_stat = fuse_main(argc, argv, &caching_oper, cfs_st);
+    int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
+
+    free(cfs_st.rootdir);
 
     return fuse_stat;
 }
