@@ -98,7 +98,7 @@ void TestModule::openTest() {
     int res;
 
     // test on an existing file
-    res = open("mount_dir/a_file.txt", OPEN_FLAGS);
+    res = open("mount_dir/a_file.txt", OPEN_FLAGS); // todo check if the returned 5 is an error
     std::cout << "expect a small integer: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
@@ -110,11 +110,6 @@ void TestModule::openTest() {
     std::cout << "errno: " << errno << std::endl;
 
     zeroErrno();
-
-    // test on file that cannot be created
-    res = open("/cant_open_a_file.txt", OPEN_FLAGS);
-    std::cout << "expect -1: " << res << std::endl;
-    std::cout << "errno: " << errno << std::endl;
 }
 
 

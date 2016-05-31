@@ -121,8 +121,12 @@ int caching_access(const char *path, int mask)
 int caching_open(const char *path, struct fuse_file_info *fi){
     cout << "    -- open -- " << endl;
 
+    int retval = 0;
+
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
+
+    // todo check if the path is longer than PATH_MAX, return error if it is
 
     cout << "if flags" << endl; // todo remove
     if (((fi->flags & 3) == O_WRONLY) || ((fi->flags & 3) == O_RDWR))
@@ -134,15 +138,19 @@ int caching_open(const char *path, struct fuse_file_info *fi){
     cout << "opening..." << endl; // todo remove
     cout << "fpath: " << fpath << endl; // todo remove
     log_call("open");
-    int res = open(fpath, OPEN_FLAGS); // todo fix "operation not permitted"
+    int fd = open(fpath, OPEN_FLAGS);
 
-    if (res >= 0)
+    if (fd < 0)
     {
-        fi->fh = (uint64_t) res;
+        retval = -errno;
     }
 
-    cout << "res: " << res << endl; // todo remove
-    return res;
+    fi->fh = (uint64_t) fd;
+    cout << "fi->fh: " << fi->fh << endl;
+
+    cout << "fd: " << fd << endl; // todo remove
+    cout << "retval: " << retval << endl; // todo remove
+    return retval;
 }
 
 
@@ -241,7 +249,12 @@ int caching_flush(const char *path, struct fuse_file_info *fi)
  */
 int caching_release(const char *path, struct fuse_file_info *fi){
     cout << "-- release --" << endl;
-    return 0;
+
+    (void) path;
+    int res = close((int) fi->fh);
+
+    cout << "res: " << res << endl;
+    return res;
 }
 
 /** Open directory
@@ -408,7 +421,6 @@ int caching_ioctl (const char *, int cmd, void *arg,
 // You are not supposed to change this function.
 void init_caching_oper()
 {
-
     caching_oper.getattr = caching_getattr;
     caching_oper.access = caching_access;
     caching_oper.open = caching_open;
@@ -476,6 +488,8 @@ int main(int argc, char* argv[]){
     int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
 
     free(cfs_st.rootdir);
+
+    // todo fix memory leek in open_log(char *)
 
     return fuse_stat;
 }
