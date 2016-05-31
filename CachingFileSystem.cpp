@@ -176,32 +176,74 @@ int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     cout << "-- read --" << endl; // todo remove
 
+    int res = 0;
+
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
     // if trying to read the log, return error
-//    if (fpath == )
-    // if offset negative 0, return 0
-    if (offset == 0)
+    if (fpath == CF_LOG->logfile_full_path)
     {
+        cout << "no such file" << endl; // todo remove
+        // no such file/directory error
+        return -ENOENT;
+    }
+
+    // if offset negative, return 0
+    if (offset < 0)
+    {
+        cout << "offset < 0, leaving read" << endl; // todo remove
         return 0;
     }
 
+    // get the file size from the file descriptor
     struct stat st;
-    stat(fpath, &st);
+    stat(fpath, &st); // todo remove if next line is ok
+//    fstat((int) fi->fh, &st);
     int file_size = (int) st.st_size;
+
     // if offset > file size, return 0
     if (offset > file_size)
     {
+        cout << "offset > file_size, leaving read" << endl; // todo remove
         return 0;
     }
 
     // if the file exists in the cache. load it from there todo
 
     // else read it from the disk
+    // find the block size
+    int block_size = (int) st.st_blksize;
 
+    // find the number of blocks to read from the disk // todo round the results?
+    int first_block = (int) (offset / block_size);
+    cout << " ++ first_block " << first_block << endl; // todo remove
 
-    return 0;
+    int num_of_blocks = (int) (size / block_size);
+    cout << " ++ num_of_blocks " << num_of_blocks << endl; // todo remove
+
+    // for each block, store it in the cache and add it to the buffer
+    for (int block = first_block ; block < num_of_blocks ; block++)
+    {
+        cout << "      && reading block " << block << " from disk." << endl; // todo remove
+        int block_offset = block * block_size;
+
+        // allocate memory for each block
+        char *block_buf = (char *) aligned_alloc(block_size, block_size);
+
+        // read to the current to the buffer block
+        ssize_t read_bytes = pread(fi->fh, block_buf, block_size, block_offset);
+
+        // store in cache // todo
+
+        // add the data to buf
+        memcpy(buf, block_buf, read_bytes);
+
+        res += read_bytes;
+    }
+
+    // return the amount of bytes atually red
+    return res;
 }
 
 /** Possibly flush cached data
@@ -464,7 +506,7 @@ void init_caching_oper()
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
-    struct cfs_state cfs_st; // todo fix compilation error
+    struct cfs_state cfs_st;
 
     init_caching_oper();
 
