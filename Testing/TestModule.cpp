@@ -11,11 +11,11 @@
 
 // todo save errno to another variable before printing
 
-void TestModule::zeroErrno() {
+void FuseTester::zeroErrno() {
     errno = 0;
 }
 
-void TestModule::getattrTest() {
+void FuseTester::getattrTest() {
 
     std::cout << " -- getattr test -- " << std::endl;
 
@@ -35,7 +35,7 @@ void TestModule::getattrTest() {
     std::cout << "errno: " << errno << std::endl;
 }
 
-void TestModule::accessTest() {
+void FuseTester::accessTest() {
 
     std::cout << " -- access test -- " << std::endl;
 
@@ -52,7 +52,7 @@ void TestModule::accessTest() {
     std::cout << "errno: " << errno << std::endl;
 }
 
-void TestModule::opendirTest() {
+void FuseTester::opendirTest() {
 
     std::cout << " -- opendir test -- " << std::endl;
 
@@ -71,26 +71,26 @@ void TestModule::opendirTest() {
     std::cout << "errno: " << errno << std::endl;
 }
 
-void TestModule::readdirTest() {
+void FuseTester::readdirTest() {
     std::cout << " -- readdir test -- " << std::endl;
 
     zeroErrno();
     DIR *pdir;
 
     // test on an existing file
-    pdir = opendir("/");
+    pdir = opendir("mount_dir");
     struct dirent *de;
     de = readdir(pdir);
     std::cout << "de->d_name: " << de->d_name << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     // test file that doesn't exist
-    pdir = opendir("/no_such_file");
+    pdir = opendir("mount_dir/no_such_file");
     std::cout << "de->d_name: " << de->d_name << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }
 
-void TestModule::openTest() {
+void FuseTester::openTest() {
     std::cout << " -- open test -- " << std::endl;
 
     zeroErrno();
@@ -115,7 +115,7 @@ void TestModule::openTest() {
 
 int main ()
 {
-    TestModule testModule;
+    FuseTester testModule;
 
     testModule.accessTest();
     testModule.getattrTest();

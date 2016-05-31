@@ -11,14 +11,12 @@
 #include <unistd.h>
 #include <memory.h>
 #include <dirent.h>
-#include <fuse.h>
 #include "logManager.h"
-#include "CachingFileSystem.h"
 
 #define OPEN_FLAGS O_RDONLY | O_DIRECT | O_SYNC
 
 using namespace std;
-char logfile_name[PATH_MAX] = "/filesystem.log";
+char logfile_name[PATH_MAX] = "/filesystem.log"; // todo ignore logfile in all functions, and add '.' to make it hidden
 
 struct fuse_operations caching_oper;
 
@@ -271,7 +269,7 @@ int caching_read(const char *path, char *buf, size_t size,
  */
 int caching_flush(const char *path, struct fuse_file_info *fi)
 {
-    cout << "-- flush --" << endl;
+    cout << "-- flush --" << endl; // todo what should this function do?
     return 0;
 }
 
@@ -433,7 +431,7 @@ If a failure occurs in this function, do nothing
 
  * Introduced in version 2.3
  */
-void caching_destroy(void *userdata){
+void caching_destroy(void *userdata){ // todo what this function does? (destroys the returned value of the init function)
     cout << "-- destroy --" << endl; // todo remove
 }
 
@@ -506,6 +504,9 @@ void init_caching_oper()
 
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
+
+    // todo verify number of arguments and their correctness, print usage message if wrong
+
     struct cfs_state cfs_st;
 
     init_caching_oper();
@@ -531,7 +532,7 @@ int main(int argc, char* argv[]){
 
     free(cfs_st.rootdir);
 
-    // todo fix memory leek in open_log(char *)
+    // todo fix memory leek in open_log(char *). Should be in caching_destroy?
 
     return fuse_stat;
 }

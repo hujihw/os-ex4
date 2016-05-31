@@ -1,10 +1,10 @@
 ### Resources and references
-resources/
+
 
 ### C++ template
 
 # Compiled Object files
-*.o
+Debug/*.o
 
 # Executables
 CachingFileSystem
@@ -14,4 +14,10 @@ TestModule
 
 # User-specific stuff:
 .idea/
+
+### Unversioned Files
 Debug/mount_dir/
+Debug/.swp
+Debug/root_dir/filesystem.log
+Debug/root_dirfilesystem.log
+~/

@@ -9,7 +9,7 @@
  * @brief This class holds test functions for the Caching filesystem
  *        function implementations.
  */
-class TestModule {
+class FuseTester {
 public:
     void zeroErrno();
 
@@ -22,6 +22,11 @@ public:
     void readdirTest();
 
     void openTest();
+};
+
+class CacheTester {
+public:
+    
 };
 
 
