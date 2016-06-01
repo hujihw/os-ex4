@@ -9,49 +9,56 @@
 #include <functional>
 #include "CacheBlock.h"
 
-typedef std::pair<char*, int> BlockID;
-// todo use regular map, map to block pointers?
-typedef std::unordered_map<std::hash<BlockID>, CacheBlock> blocks_map;
-typedef std::list<CacheBlock> cache_chain; // todo use block pointers?
+// the file descriptor and the block number
+typedef std::pair<int, int> BlockID;
+
+typedef std::list<CacheBlock*> CacheChain; // TODO check necessity of *
+
+typedef std::unordered_map<BlockID, CacheChain::iterator> BlocksMap;
 
 class CacheManager {
-    // functions to implement
+
+public:
+    /**
+     * @brief constructor for the CacheManager class.
+     */
+    CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew);
 
     /**
      * @brief Find the given block in cache
+     * returns nullptr if the block was not found
      */
-    CacheBlock *findBlock(BlockID *blockID); // todo should be (void *)?
+    CacheChain::iterator findBlock(BlockID blockID);
 
     /**
-     * @brief Retrieve a block from the cache (get it's value), should use findBlock.
+     * @brief Retrieve a block's buffer from the cache
+     * returns nullptr if the block was not found
      */
-    CacheBlock *retrieveBlock(BlockID *blockID);
+    char *retrieveBuffer(BlockID blockID); // TODO should i return a pointer
+    //  TODO to the char * ??
 
     /**
-     * @brief Insert a new block to the cache. Should use moveToHead().
+     * @brief Insert a new block to the cache.
      */
-    void insertBlock(BlockID *blockID, char *buf);
+    void insertBlock(CacheBlock *block);
 
-    /**
-     * @brief Remove a block from the cache. Should use removeTail().
-     */
-    void removeBlock(BlockID *blockID);
 
     /**
      * @brief Move a block to the head of the list, and change relevant pointers.
      */
-    void moveToHead(BlockID *blockID);
+    void moveToHead(BlockID blockID);
 
-    /**
-     * @brief Remove the block at the tail of the list, and change relevant pointers.
-     */
-    void removeTail();
 
+private:
     // data members
-    cache_chain chain;
-    CacheBlock *newBound;
-    CacheBlock *oldBound;
+    int numberOfBlocks;
+    int blockSize;
+    BlocksMap blocksMap;
+    CacheChain cacheChain;
+    CacheChain::iterator middleSection; // the first block in the middle section
+    CacheChain::iterator oldsection; // the first block in te old section
 };
+
 
 
 #endif //EX4_CACHEMANAGER_H
