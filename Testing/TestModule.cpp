@@ -30,7 +30,7 @@ void FuseTester::getattrTest() {
     std::cout << "errno: " << errno << std::endl;
 
     // test file that doesn't exist
-    res = stat("no_such_file", stat_buf);
+    res = stat("mount_dir/no_such_file", stat_buf);
     std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }
@@ -47,7 +47,7 @@ void FuseTester::accessTest() {
     std::cout << "errno: " << errno << std::endl;
 
     // test file that doesn't exist
-    res = access("no_such_file", F_OK);
+    res = access("mount_dir/no_such_file", F_OK);
     std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }

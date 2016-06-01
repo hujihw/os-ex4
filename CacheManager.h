@@ -10,8 +10,9 @@
 #include "CacheBlock.h"
 
 typedef std::pair<char*, int> BlockID;
+// todo use regular map, map to block pointers?
 typedef std::unordered_map<std::hash<BlockID>, CacheBlock> blocks_map;
-typedef std::list<CacheBlock> cache_chain;
+typedef std::list<CacheBlock> cache_chain; // todo use block pointers?
 
 class CacheManager {
     // functions to implement
