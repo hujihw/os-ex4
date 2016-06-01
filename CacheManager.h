@@ -9,43 +9,47 @@
 #include <functional>
 #include "CacheBlock.h"
 
-typedef std::unordered_map<std::hash<char*>, CacheBlock> blocks_map; // todo what is the exact type of the buffers used as keys?
+typedef std::pair<char*, int> BlockID;
+typedef std::unordered_map<std::hash<BlockID>, CacheBlock> blocks_map;
 typedef std::list<CacheBlock> cache_chain;
 
 class CacheManager {
-    cache_chain chain;
-
     // functions to implement
 
     /**
      * @brief Find the given block in cache
      */
-    CacheBlock *findBlock(); // todo should be (void *)?
+    CacheBlock *findBlock(BlockID *blockID); // todo should be (void *)?
 
     /**
      * @brief Retrieve a block from the cache (get it's value), should use findBlock.
      */
-    CacheBlock *retrieveBlock();
+    CacheBlock *retrieveBlock(BlockID *blockID);
 
     /**
      * @brief Insert a new block to the cache. Should use moveToHead().
      */
-    void insertBlock();
+    void insertBlock(BlockID *blockID, char *buf);
 
     /**
      * @brief Remove a block from the cache. Should use removeTail().
      */
-    void removeBlock();
+    void removeBlock(BlockID *blockID);
 
     /**
      * @brief Move a block to the head of the list, and change relevant pointers.
      */
-    void moveToHead();
+    void moveToHead(BlockID *blockID);
 
     /**
      * @brief Remove the block at the tail of the list, and change relevant pointers.
      */
     void removeTail();
+
+    // data members
+    cache_chain chain;
+    CacheBlock *newBound;
+    CacheBlock *oldBound;
 };
 
 
