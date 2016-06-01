@@ -24,13 +24,21 @@ void FuseTester::getattrTest() {
     struct stat *stat_buf = new struct stat;
 
     // test on an existing file
+    std::cout << std::endl << "Test stat on an existing file" << std::endl;
     int res = stat("mount_dir", stat_buf);
 
     std::cout << "expect 0: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     // test file that doesn't exist
+    std::cout << std::endl << "Test stat on a non existing file" << std::endl;
     res = stat("mount_dir/no_such_file", stat_buf);
+    std::cout << "expect -1: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    // test logfile reference
+    std::cout << std::endl << "Test stat on the logfile" << std::endl;
+    res = stat("mount_dir/filesystem.log", stat_buf);
     std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 }
@@ -98,6 +106,7 @@ void FuseTester::openTest() {
     int res;
 
     // test on an existing file
+    std::cout << "Test opening an existing file" << std::endl;
     res = open("mount_dir/a_file.txt", OPEN_FLAGS); // todo check if the returned 5 is an error
     std::cout << "expect a small integer: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
@@ -105,8 +114,49 @@ void FuseTester::openTest() {
     zeroErrno();
 
     // test on non existing file
+    std::cout << "Test opening a non existing" << std::endl;
     res = open("mount_dir/open_a_file.txt", OPEN_FLAGS);
     std::cout << "expect -1 (no permissions to create a new file): " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    zeroErrno();
+
+    // test logfile reference
+    std::cout << "Test opening the logfile" << std::endl;
+    res = open("mount_dir/filesystem.log", OPEN_FLAGS);
+    std::cout << "expect -1: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    zeroErrno();
+}
+
+void FuseTester::renamrTest() {
+
+    std::cout << " -- rename test -- " << std::endl;
+
+    int res = 0;
+    zeroErrno();
+
+    // test logfile reference
+    std::cout << std::endl << "Rename the logfile" << std::endl;
+    res = rename("mount_dir/filesystem.log", "mount_dir/new_name.log");
+    std::cout << "expect -1: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    zeroErrno();
+
+    // test renaming existing file
+    std::cout << std::endl << "Rename an existing file" << std::endl;
+    res = rename("mount_dir/a_file.txt", "mount_dir/new_name.txt");
+    std::cout << "expect 0: " << res << std::endl;
+    std::cout << "errno: " << errno << std::endl;
+
+    zeroErrno();
+
+    // test renaming a non existing file
+    std::cout << std::endl << "Rename a non existing file" << std::endl;
+    res = rename("mount_dir/no_such_file", "mount_dir/no_file_new_name.txt");
+    std::cout << "expect -1: " << res << std::endl;
     std::cout << "errno: " << errno << std::endl;
 
     zeroErrno();
@@ -115,13 +165,14 @@ void FuseTester::openTest() {
 
 int main ()
 {
-    FuseTester testModule;
+    FuseTester fuseTester;
 
-    testModule.accessTest();
-    testModule.getattrTest();
-    testModule.readdirTest();
-    testModule.opendirTest();
-    testModule.openTest();
+    fuseTester.accessTest();
+    fuseTester.getattrTest();
+    fuseTester.readdirTest();
+    fuseTester.opendirTest();
+    fuseTester.openTest();
+    fuseTester.renamrTest();
 
     return 0;
 }

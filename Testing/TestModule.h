@@ -22,6 +22,8 @@ public:
     void readdirTest();
 
     void openTest();
+
+    void renamrTest();
 };
 
 class CacheTester {

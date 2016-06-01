@@ -3,8 +3,7 @@
 #ifndef EX4_CACHINGFILESYSTEM_H
 #define EX4_CACHINGFILESYSTEM_H
 
-#include <iostream>
-#include <stdio.h>
+
 
 void set_root_dir(char *root_dir, cfs_state *state);
 

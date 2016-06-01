@@ -7,6 +7,8 @@
 #define FUSE_USE_VERSION 26
 
 
+#include <iostream>
+#include <stdio.h>
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
@@ -14,11 +16,27 @@
 #include "logManager.h"
 
 #define OPEN_FLAGS O_RDONLY | O_DIRECT | O_SYNC
+#define SUCCESS 0
 
 using namespace std;
 char logfile_name[PATH_MAX] = "/filesystem.log"; // todo ignore logfile in all functions, and add '.' to make it hidden
 
 struct fuse_operations caching_oper;
+
+/**
+ * @brief Check if trying to refer to the logfile from the filesystem
+ */
+int refering_logfile(char* fpath)
+{
+    // compare the given path with the logfile's path
+    if (strcmp(fpath, CF_LOG->logfile_full_path) == 0)
+    {
+        // return no such file error when trying to refer to the logfile
+        return -ENOENT;
+    }
+
+    return SUCCESS;
+}
 
 /**
  * @brief Sets the root dir of the current run
@@ -47,10 +65,28 @@ int caching_getattr(const char *path, struct stat *statbuf){
     cout << "   -- getattr --" << endl; // todo remove
     cout << "++path: " << path << endl; // todo remove
 
-    char full_path[PATH_MAX];
-    caching_full_path(full_path, path);
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
+
+
+//    int res = refering_logfile(fpath);
+    int res = 0;
+
+    // return erro if trying to refer to the logfile
+//    if (res)
+//    {
+//        return res;
+//    }
+
+    // forward the call and log it
     log_call("lstat");
-    int res = lstat(full_path, statbuf);
+    res = lstat(fpath, statbuf);
+
+    if (res < 0)
+    {
+        return -errno;
+    }
+
     return res;
 }
 
@@ -396,7 +432,30 @@ int caching_releasedir(const char *path, struct fuse_file_info *fi){
 /** Rename a file */
 int caching_rename(const char *path, const char *newpath){
     cout << "-- rename --" << endl; // todo remove
-    return 0;
+
+    int res = 0;
+    char fpath[PATH_MAX];
+    char fnewpath[PATH_MAX];
+
+    // generate full path from the given paths
+    caching_full_path(fpath, path);
+    caching_full_path(fnewpath, newpath);
+
+    // check if trying to rename the logfile
+//    int res = refering_logfile(fpath);
+//    if (res)
+//    {
+//        return res;
+//    }
+
+    cout << "   %% fpath: " << fpath << endl; // todo remove
+    cout << "   %% fnewpath: " << fnewpath << endl; // todo remove
+
+    res = rename(fpath, fnewpath); // todo moove this line abobe the cache check?
+
+    // todo chack if file is cached, and rename the relevant blocks if it is
+    cout << "res: " << res << endl; // todo remove
+    return res;
 }
 
 /**
