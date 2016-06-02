@@ -75,6 +75,11 @@ public:
      */
 //    void moveToHead(BlockID blockID);
 
+    /**
+     * @brief returns an iterator to the end of the cache. for checking if
+     * the find method was succesful
+     */
+    CacheChain::iterator getCacheEnd();
 
 private:
 
@@ -83,8 +88,8 @@ private:
     int blockSize;
     BlocksMap blocksMap;
     CacheChain cacheChain;
-    CacheChain::iterator middleSection; // the first block in the middle section
-    CacheChain::iterator oldSection; // the first block in te old section
+    CacheChain::iterator middleSectionIter; // the first block in the middle section
+    CacheChain::iterator oldSectionIter; // the first block in te old section
 };
 
 

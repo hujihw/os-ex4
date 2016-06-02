@@ -20,11 +20,11 @@ CacheManager::CacheManager(int numberOfBlocks, int blockSize, double fOld,
 
     // fills the list with nullptr, newSectionSize +1 times.
     cacheChain.assign((unsigned long) newSectionSize + 1, nullptr);
-    middleSection = cacheChain.end();
+    middleSectionIter = cacheChain.end();
 
     // fills the list with nullptr, middleSectionSize times. could be zero
     cacheChain.assign((unsigned long) middleSectionSize, nullptr);
-    oldSection = cacheChain.end();
+    oldSectionIter = cacheChain.end();
 
     // fills the list with nullptr, oldSectionSize -1 times.
     cacheChain.assign((unsigned long) oldSectionSize - 1, nullptr);
@@ -48,25 +48,29 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
     auto got = blocksMap.find(blockID);
 
     if (got == blocksMap.end()){
-        // the block is not in the map
-        return cacheChain.end(); // todo test if this fails, check what is
-        // the-value of second
+        // the block is not in the cache
+        return cacheChain.end();
     }
     auto blockIter = got->second;
 
     // move the block to the head and update its section attribute to newSection
     cacheChain.push_front(*blockIter); //put at head
     cacheChain.erase(blockIter); // erase from original location
-    (*blockIter)->setSection(newSection); // set the
+    (*blockIter)->setSection(newSection); // set the section attribute to newSection
+    // reset the iterator in the map to point at the block
     blocksMap[blockID] = cacheChain.begin();
-
     // increment the blocks refcount
     (*blockIter)->incrementRefCount();
 
     // correct the relevant bounds and update the new bounds section attribute
-    if ((*blockIter)->getSection() == newSection){
-
+    switch ((*blockIter)->getSection()){
+        case newSection:
+            break;
+        case middleSection:
+            // add code
+            break;
     }
+
 
     return got->second;
 }
@@ -97,3 +101,10 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
 
 }
 
+/**
+ * @brief returns an iterator to the end of the cache. for checking if
+ * the find method was succesful
+ */
+CacheChain::iterator CacheManager::getCacheEnd() {
+    return cacheChain.end();
+}
