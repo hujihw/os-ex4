@@ -169,10 +169,6 @@ CacheManager CacheTester::initTest() {
 
 }
 
-void CacheTester::test1() {
-
-}
-
 
 int main ()
 {
