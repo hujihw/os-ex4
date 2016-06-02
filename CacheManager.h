@@ -83,7 +83,7 @@ private:
     BlocksMap blocksMap;
     CacheChain cacheChain;
     CacheChain::iterator middleSection; // the first block in the middle section
-    CacheChain::iterator oldsection; // the first block in te old section
+    CacheChain::iterator oldSection; // the first block in te old section
 };
 
 
