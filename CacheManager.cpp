@@ -4,6 +4,8 @@
 #include <iostream>
 #include "CacheManager.h"
 
+#define BLOCK_NOT_FOUND 0
+
 
 /**
  * @brief constructor for the CacheManager class.
@@ -42,7 +44,7 @@ CacheManager::~CacheManager() {
 
 /**
  * @brief Find the given block in cache
- * returns nullptr if the block was not found
+ * returns cacheChain.end() if the block was not found
  */
 CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
     auto got = blocksMap.find(blockID);
@@ -64,15 +66,23 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
 
     // correct the relevant bounds and update the new bounds section attribute
     switch ((*blockIter)->getSection()){
+
         case newSection:
             break;
+
         case middleSection:
-            // add code
+            middleSectionIter--;
+            (*middleSectionIter)->setSection(middleSection);
+            break;
+
+        case oldSection:
+            middleSectionIter--;
+            (*middleSectionIter)->setSection(middleSection);
+            oldSectionIter--;
+            (*oldSectionIter)->setSection(oldSection);
             break;
     }
-
-
-    return got->second;
+    return blockIter;
 }
 
 /**
@@ -82,11 +92,26 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
 char *CacheManager::retrieveBuffer(BlockID blockID) {
     auto blockIter = findBlock(blockID);
 
-    if (*blockIter == NULL){
+    if (blockIter == cacheChain.end()){
         return nullptr;
     }
 
     return (*blockIter)->getBuff();
+}
+
+
+/**
+ * @brief Retrieve a block's file id from the cache
+ * returns zero if the block was not found
+ */
+int CacheManager::retrieveFileId(BlockID blockID) {
+    auto blockIter = findBlock(blockID);
+
+    if (blockIter == cacheChain.end()){
+        return BLOCK_NOT_FOUND;
+    }
+
+    return (*blockIter)->getFileId();
 }
 
 /**
@@ -103,8 +128,10 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
 
 /**
  * @brief returns an iterator to the end of the cache. for checking if
- * the find method was succesful
+ * the find method was successful
  */
 CacheChain::iterator CacheManager::getCacheEnd() {
     return cacheChain.end();
 }
+
+
