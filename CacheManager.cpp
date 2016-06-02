@@ -57,12 +57,10 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
 
     // move the block to the head and update its section attribute to newSection
     cacheChain.push_front(*blockIter); //put at head
-    cacheChain.erase(blockIter); // erase from original location
-    (*blockIter)->setSection(newSection); // set the section attribute to newSection
+    (*cacheChain.begin())->setSection(newSection); // set the section attribute to newSection
     // reset the iterator in the map to point at the block
     blocksMap[blockID] = cacheChain.begin();
-    // increment the blocks refcount
-    (*blockIter)->incrementRefCount();
+
 
     // correct the relevant bounds and update the new bounds section attribute
     switch ((*blockIter)->getSection()){
@@ -71,18 +69,26 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             break;
 
         case middleSection:
+            // increment the blocks refcount
+            (*blockIter)->incrementRefCount();
+
             middleSectionIter--;
             (*middleSectionIter)->setSection(middleSection);
             break;
 
         case oldSection:
+            // increment the blocks refcount
+            (*blockIter)->incrementRefCount();
+
             middleSectionIter--;
             (*middleSectionIter)->setSection(middleSection);
             oldSectionIter--;
             (*oldSectionIter)->setSection(oldSection);
             break;
     }
-    return blockIter;
+
+    cacheChain.erase(blockIter); // erase from original location
+    return cacheChain.begin();
 }
 
 /**
@@ -119,8 +125,31 @@ int CacheManager::retrieveFileId(BlockID blockID) {
  */
 void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
     CacheBlock* block = new CacheBlock(fileDesc, blockNumber, buff);
-    // remove the relevant block from the old section
-    // correct the both boundaries and update section atrr
+
+    // remove the last element if the list is not full
+    if (cacheChain.back() == nullptr){
+        cacheChain.pop_back();
+    }
+    else{ //find the least referenced block in oldSection and remove it
+        int minimalReff = 0;
+        CacheChain::iterator eraseCandidateBlockIter;
+        for (CacheChain::iterator it=oldSectionIter; it != cacheChain.end();
+             ++it){
+            if ((*it)->getRefCount() <= minimalReff){
+                eraseCandidateBlockIter = it;
+                minimalReff = (*eraseCandidateBlockIter)->getRefCount();
+            }
+        }
+        cacheChain.erase(eraseCandidateBlockIter);
+    }
+
+    // correct both boundaries and update the new bounds section attribute
+    middleSectionIter--;
+    (*middleSectionIter)->setSection(middleSection);
+    oldSectionIter--;
+    (*oldSectionIter)->setSection(oldSection);
+
+    // put the new block at the top and update it in the map
     cacheChain.emplace_front(block);
     blocksMap[block->getBlockId()] = cacheChain.begin();
 
@@ -133,5 +162,3 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
 CacheChain::iterator CacheManager::getCacheEnd() {
     return cacheChain.end();
 }
-
-

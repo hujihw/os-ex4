@@ -64,7 +64,7 @@ public:
     int retrieveFileId(BlockID blockID);
 
     /**
-     * @brief Insert a new block to the cache.
+     * @brief constructs a new block and adds it to the cache.
      */
     void insertBlock(int fileDesc, int blockNumber, char *buff);
 
