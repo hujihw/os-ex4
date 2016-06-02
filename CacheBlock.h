@@ -20,7 +20,7 @@ public:
     /**
      * @brief constructor, initializes the refCount to 1.
      */
-    CacheBlock(int fileId, int blockNumber, char *buff);
+    CacheBlock(int fileId, int blockNumber, const char *buff);
 
     /**
      * @brief getter to the counter of times the block was called.
@@ -41,7 +41,7 @@ public:
     /**
      * @ brief getter for the buffer that holds the file contents
      */
-    char * getBuff() const;
+    const char * getBuff() const;
 
     /**
      * @brief getter for the file id
@@ -67,7 +67,7 @@ private:
     int refCount;
     int blockNumber;
     int fileId;
-    char* buff;
+    const char* buff;
     Section section;
 };
 

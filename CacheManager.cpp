@@ -5,7 +5,7 @@
 #include "CacheManager.h"
 
 #define BLOCK_NOT_FOUND 0
-
+#define NULL_BLOCK -1
 
 /**
  * @brief constructor for the CacheManager class.
@@ -14,22 +14,35 @@ CacheManager::CacheManager(int numberOfBlocks, int blockSize, double fOld,
                            double fNew)
         : numberOfBlocks(numberOfBlocks), blockSize(blockSize), blocksMap(),
           cacheChain(){
+
     int newSectionSize = (int) floor(fNew * numberOfBlocks);
     int oldSectionSize = (int) floor(fOld * numberOfBlocks);
 
     // this int can be zero
     int middleSectionSize = numberOfBlocks - newSectionSize - oldSectionSize;
 
-    // fills the list with nullptr, newSectionSize +1 times.
-    cacheChain.assign((unsigned long) newSectionSize + 1, nullptr);
-    middleSectionIter = cacheChain.end();
+    for (int i = 1; i <= numberOfBlocks; i++){
+        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr); // todo maybe-not new
+        cacheChain.push_front(nullBlock);
+        if (i == newSectionSize){
+            middleSectionIter = std::prev(cacheChain.end());
+        }
+        if (i == newSectionSize + middleSectionSize){
+            oldSectionIter = std::prev(cacheChain.end());
+        }
+    }
 
-    // fills the list with nullptr, middleSectionSize times. could be zero
-    cacheChain.assign((unsigned long) middleSectionSize, nullptr);
-    oldSectionIter = cacheChain.end();
 
-    // fills the list with nullptr, oldSectionSize -1 times.
-    cacheChain.assign((unsigned long) oldSectionSize - 1, nullptr);
+//     fills the list with nullBlocks, newSectionSize +1 times.
+//    cacheChain.assign((unsigned long) newSectionSize + 1, nullBlock);
+//    middleSectionIter = cacheChain.end();
+//
+//    // fills the list with nullBlocks, middleSectionSize times. could be zero
+//    cacheChain.assign((unsigned long) middleSectionSize, nullBlock);
+//    oldSectionIter = cacheChain.end();
+//
+//    // fills the list with nullBlocks, oldSectionSize -1 times.
+//    cacheChain.assign((unsigned long) oldSectionSize - 1, nullBlock);
 
     std::cout<<"the size of the sections are:" << newSectionSize << ", " <<
             middleSectionSize << ", "<<oldSectionSize<< std::endl;
@@ -73,9 +86,7 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             (*blockIter)->incrementRefCount();
 
             middleSectionIter--;
-            if ((*middleSectionIter) != nullptr) {
-                (*middleSectionIter)->setSection(middleSection);
-            }
+            (*middleSectionIter)->setSection(middleSection);
             break;
 
         case oldSection:
@@ -83,13 +94,9 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             (*blockIter)->incrementRefCount();
 
             middleSectionIter--;
-            if ((*middleSectionIter) != nullptr) {
-                (*middleSectionIter)->setSection(middleSection);
-            }
+            (*middleSectionIter)->setSection(middleSection);
             oldSectionIter--;
-            if ((*oldSectionIter) != nullptr) {
-                (*oldSectionIter)->setSection(oldSection);
-            }
+            (*oldSectionIter)->setSection(oldSection);
             break;
     }
 
@@ -101,7 +108,7 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
  * @brief Retrieve a block's buffer from the cache
  * returns nullptr if the block was not found
  */
-char *CacheManager::retrieveBuffer(BlockID blockID) {
+const char * CacheManager::retrieveBuffer(BlockID blockID) {
     auto blockIter = findBlock(blockID);
 
     if (blockIter == cacheChain.end()){
@@ -129,11 +136,11 @@ int CacheManager::retrieveFileId(BlockID blockID) {
 /**
  * @brief Insert a new block to the cache.
  */
-void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
+void CacheManager::insertBlock(int fileDesc, int blockNumber, const char *buff){
     CacheBlock* block = new CacheBlock(fileDesc, blockNumber, buff);
 
     // remove the last element if the list is not full
-    if (cacheChain.back() == nullptr){
+    if (cacheChain.back()->getBlockNumber() == NULL_BLOCK){
         cacheChain.pop_back();
     }
     else{ //find the least referenced block in oldSection and remove it
@@ -151,13 +158,9 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
 
     // correct both boundaries and update the new bounds section attribute
     middleSectionIter--;
-    if ((*middleSectionIter) != nullptr) {
-        (*middleSectionIter)->setSection(middleSection);
-    }
+    (*middleSectionIter)->setSection(middleSection);
     oldSectionIter--;
-    if ((*oldSectionIter) != nullptr) {
-        (*oldSectionIter)->setSection(oldSection);
-    }
+    (*oldSectionIter)->setSection(oldSection);
 
     // put the new block at the top and update it in the map
     cacheChain.emplace_front(block);

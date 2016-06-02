@@ -30,8 +30,6 @@ public:
 class CacheTester {
 public:
     CacheManager initTest();
-
-
 };
 
 
