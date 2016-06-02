@@ -5,8 +5,6 @@
 
 
 
-void set_root_dir(char *root_dir, cfs_state *state);
-
 void caching_full_path(char *absPath, const char *path);
 
 int caching_getattr(const char *path, struct stat *statbuf);

@@ -14,12 +14,15 @@
 #include <memory.h>
 #include <dirent.h>
 #include "logManager.h"
+#include "CacheManager.h"
 
 #define OPEN_FLAGS O_RDONLY | O_DIRECT | O_SYNC
 #define SUCCESS 0
 
 using namespace std;
-char logfile_name[PATH_MAX] = "filesystem.log"; // todo ignore logfile in all functions, and add '.' to make it hidden
+static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile in all functions
+
+static CacheManager *cacheManager;
 
 struct fuse_operations caching_oper;
 
@@ -216,6 +219,8 @@ int caching_read(const char *path, char *buf, size_t size,
 
     int res = 0;
 
+    size_t bytesToRead = size;
+
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
@@ -247,9 +252,6 @@ int caching_read(const char *path, char *buf, size_t size,
         return 0;
     }
 
-    // if the file exists in the cache. load it from there todo
-
-    // else read it from the disk
     // find the block size
     int block_size = (int) st.st_blksize;
 
@@ -260,25 +262,53 @@ int caching_read(const char *path, char *buf, size_t size,
     int num_of_blocks = (int) (size / block_size);
     cout << " ++ num_of_blocks " << num_of_blocks << endl; // todo remove
 
+    // else read it from the disk
     // for each block, store it in the cache and add it to the buffer
     for (int block = first_block ; block < num_of_blocks ; block++)
     {
         cout << "      && reading block " << block << " from disk." << endl; // todo remove
         int block_offset = block * block_size;
 
+        int read_size = block_size;
+
+        // if the block exists in the cache. load it from there todo
+        // create a block pair, and hash key
+        BlockID blockID;
+        blockID.first = (int) st.st_ino;
+        blockID.second = block;
+
+        // find this key in the cache
+        CacheChain::iterator chainBlock = cacheManager->findBlock(blockID);
+
+        // if the key exsist, retrive it
+        if (chainBlock != nullptr)
+        {
+            CacheBlock cacheBlock = *(*chainBlock);
+            char *block_buf = cacheBlock.getBuff();
+            if (size < block_size)
+            {
+                read_size = (int) size;
+            }
+
+            memcpy(buf, block_buf, read_size);
+            res += read_size;
+        }
+
         // allocate memory for each block
         char *block_buf = (char *) aligned_alloc(block_size, block_size);
 
         // read to the current block to the buffer block, and log the call
         log_call("pread");
-        ssize_t read_bytes = pread(fi->fh, block_buf, block_size, block_offset);
+        read_size = pread(fi->fh, block_buf, block_size, block_offset);
 
         // store in cache // todo
 
         // add the data to buf
-        memcpy(buf, block_buf, read_bytes);
+        memcpy(buf, block_buf, read_size);
 
-        res += read_bytes;
+        size -= read_size;
+
+        res += read_size;
     }
 
     // return the amount of bytes atually red
@@ -596,6 +626,10 @@ int main(int argc, char* argv[]){
     // todo verify number of arguments and their correctness, print usage message if wrong
 
     struct cfs_state cfs_st;
+//    int numberOfBlocks, int blockSize, int fOld, int fNew
+    CacheManager cm(100, 512, 0.2, 0.2);
+//    cacheManager = cm;
+
 
     init_caching_oper();
 
@@ -603,12 +637,12 @@ int main(int argc, char* argv[]){
 
     char log_full_path[PATH_MAX];
     strcpy(log_full_path, cfs_st.rootdir);
-    cout << "       rootdir: " << cfs_st.rootdir << endl;
     strcat(log_full_path, "/");
     strncat(log_full_path, logfile_name, PATH_MAX);
     cfs_st.logfile_full_path = log_full_path;
 
     cfs_st.logfile = open_log(log_full_path);
+
 
     argv[1] = argv[2];
     for (int i = 2; i< (argc - 1); i++){
