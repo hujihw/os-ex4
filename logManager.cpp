@@ -6,10 +6,9 @@ FILE *open_log(char *logfile) {
     FILE *logFile;
 
     logFile = fopen(logfile, "a");
-    std::cout << "creating log file: " << logfile << std::endl;
+    std::cout << "creating log file: " << logfile << std::endl; // todo remove
     if (logFile == nullptr){
-        perror("Logfile not created");
-        // todo exit?
+        perror("Logfile not created"); // todo exit?
     }
 
     return logFile;
