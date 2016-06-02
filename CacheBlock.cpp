@@ -5,7 +5,7 @@
 /**
  * @brief constructor, initializes the refCount to 1.
  */
-CacheBlock::CacheBlock(int fileId, int blockNumber, char *buff) {
+CacheBlock::CacheBlock(int fileId, int blockNumber, const char *buff) {
     refCount = 1;
     this->fileId = fileId;
     this->blockNumber = blockNumber;
@@ -38,7 +38,7 @@ int CacheBlock::getBlockNumber() const {
 /**
  * @ brief getter for the buffer that holds the file contents
  */
-char *CacheBlock::getBuff() const {
+const char * CacheBlock::getBuff() const {
     return buff;
 }
 
@@ -58,14 +58,14 @@ BlockID CacheBlock::getBlockId() const {
 
 
 /**
- * @brief getter for the section type that the block is in
+ * @brief setter for the section type that the block is in
  */
 void CacheBlock::setSection(Section section) {
     CacheBlock::section = section;
 }
 
 /**
- * @brief setter for the section type that the block is in
+ * @brief getter for the section type that the block is in
  */
 Section CacheBlock::getSection() const {
     return section;

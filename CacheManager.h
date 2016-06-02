@@ -55,7 +55,7 @@ public:
      * @brief Retrieve a block's buffer from the cache
      * returns nullptr if the block was not found
      */
-    char *retrieveBuffer(BlockID blockID);
+    const char * retrieveBuffer(BlockID blockID);
 
     /**
      * @brief Retrieve a block's file id from the cache
@@ -66,7 +66,7 @@ public:
     /**
      * @brief constructs a new block and adds it to the cache.
      */
-    void insertBlock(int fileDesc, int blockNumber, char *buff);
+    void insertBlock(int fileDesc, int blockNumber,  const char *buff);
 
     /**
      * @brief returns an iterator to the end of the cache. for checking if
