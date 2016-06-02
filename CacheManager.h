@@ -34,7 +34,7 @@ namespace std
 // the file descriptor and the block number
 typedef std::pair<int, int> BlockID;
 
-typedef std::list<CacheBlock *> CacheChain; // TODO check necessity of *
+typedef std::list<CacheBlock *> CacheChain;
 
 typedef std::unordered_map<BlockID, CacheChain::iterator> BlocksMap;
 
@@ -68,7 +68,6 @@ public:
      */
     void insertBlock(int fileDesc, int blockNumber, char *buff);
 
-
     /**
      * @brief returns an iterator to the end of the cache. for checking if
      * the find method was successful
@@ -90,7 +89,5 @@ private:
     CacheChain::iterator middleSectionIter; // the first block in the middle section
     CacheChain::iterator oldSectionIter; // the first block in te old section
 };
-
-
 
 #endif //EX4_CACHEMANAGER_H

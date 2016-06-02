@@ -73,7 +73,9 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             (*blockIter)->incrementRefCount();
 
             middleSectionIter--;
-            (*middleSectionIter)->setSection(middleSection);
+            if ((*middleSectionIter) != nullptr) {
+                (*middleSectionIter)->setSection(middleSection);
+            }
             break;
 
         case oldSection:
@@ -81,9 +83,13 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             (*blockIter)->incrementRefCount();
 
             middleSectionIter--;
-            (*middleSectionIter)->setSection(middleSection);
+            if ((*middleSectionIter) != nullptr) {
+                (*middleSectionIter)->setSection(middleSection);
+            }
             oldSectionIter--;
-            (*oldSectionIter)->setSection(oldSection);
+            if ((*oldSectionIter) != nullptr) {
+                (*oldSectionIter)->setSection(oldSection);
+            }
             break;
     }
 
@@ -145,9 +151,13 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
 
     // correct both boundaries and update the new bounds section attribute
     middleSectionIter--;
-    (*middleSectionIter)->setSection(middleSection);
+    if ((*middleSectionIter) != nullptr) {
+        (*middleSectionIter)->setSection(middleSection);
+    }
     oldSectionIter--;
-    (*oldSectionIter)->setSection(oldSection);
+    if ((*oldSectionIter) != nullptr) {
+        (*oldSectionIter)->setSection(oldSection);
+    }
 
     // put the new block at the top and update it in the map
     cacheChain.emplace_front(block);
