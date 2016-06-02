@@ -8,6 +8,7 @@
 
 
 #include <iostream>
+#include <map>
 #include <stdio.h>
 #include <fuse.h>
 #include <unistd.h>
@@ -23,8 +24,16 @@ using namespace std;
 static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile in all functions
 
 static CacheManager *cacheManager;
-
 struct fuse_operations caching_oper;
+static std::map<ino_t, char*> *inotToPath;
+
+/**
+ * @brief add an ino_t to the map of paths
+ */
+void add_ino_t(ino_t ino, char *fpath)
+{
+    inotToPath->at(*fpath);
+}
 
 /**
  * @brief Check if trying to refer to the logfile from the filesystem
@@ -256,7 +265,7 @@ int caching_read(const char *path, char *buf, size_t size,
     int block_size = (int) st.st_blksize;
 
     // find the number of blocks to read from the disk // todo round the results?
-    int first_block = (int) ((offset / block_size) + 1);
+    int first_block = (int) (offset / block_size);
     cout << " ++ first_block " << first_block << endl; // todo remove
 
     int num_of_blocks = (int) (size / block_size);
@@ -264,10 +273,9 @@ int caching_read(const char *path, char *buf, size_t size,
 
     // else read it from the disk
     // for each block, store it in the cache and add it to the buffer
-    for (int block = first_block ; block < (num_of_blocks + 1) ; block++)
+    for (int block = first_block ; block < num_of_blocks ; block++)
     {
-        cout << "      && reading block " << block << " from disk." << endl; // todo remove
-        int block_offset = block * block_size;
+        int block_offset = (block * block_size);
 
         int read_size = block_size;
 
@@ -281,8 +289,9 @@ int caching_read(const char *path, char *buf, size_t size,
         CacheChain::iterator foundBlock = cacheManager->findBlock(blockID);
 
         // if the key exsist, retrive it
-        if (*foundBlock == nullptr)
+        if ((*foundBlock) == nullptr)
         {
+            cout << "   @@ block found in cache!" << endl; // todo remove
             CacheBlock cacheBlock = *(*foundBlock);
             char *block_buf = cacheBlock.getBuff();
             if (size < block_size)
@@ -292,15 +301,19 @@ int caching_read(const char *path, char *buf, size_t size,
 
             memcpy(buf, block_buf, read_size);
             res += read_size;
+            size -= read_size;
         }
 
         // allocate memory for each block
         char *block_buf = (char *) aligned_alloc(block_size, block_size);
 
+        cout << "      && reading block " << block << " from disk." << endl; // todo remove
+
         // read to the current block to the buffer block, and log the call
         log_call("pread");
-        read_size = pread(fi->fh, block_buf, block_size, block_offset);
+        read_size = (int) pread(fi->fh, block_buf, block_size, block_offset);
 
+        cout << "read_size " << read_size << endl; // todo remove
         // store in cache // todo
 
         // add the data to buf
@@ -626,10 +639,11 @@ int main(int argc, char* argv[]){
     // todo verify number of arguments and their correctness, print usage message if wrong
 
     struct cfs_state cfs_st;
-//    int numberOfBlocks, int blockSize, int fOld, int fNew
-    CacheManager cm(100, 512, 0.2, 0.2);
-//    cacheManager = cm;
 
+//    int numberOfBlocks, int blockSize, int fOld, int fNew // todo remove
+    // create a cache manager instance
+    CacheManager *cm = new CacheManager(100, 512, 0.2, 0.2);
+    cacheManager = cm;
 
     init_caching_oper();
 
@@ -655,6 +669,7 @@ int main(int argc, char* argv[]){
     int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
 
     free(cfs_st.rootdir);
+    delete cacheManager;
 
     // todo fix memory leek in open_log(char *). Should be in caching_destroy?
 
