@@ -256,7 +256,7 @@ int caching_read(const char *path, char *buf, size_t size,
     int block_size = (int) st.st_blksize;
 
     // find the number of blocks to read from the disk // todo round the results?
-    int first_block = (int) (offset / block_size);
+    int first_block = (int) ((offset / block_size) + 1);
     cout << " ++ first_block " << first_block << endl; // todo remove
 
     int num_of_blocks = (int) (size / block_size);
@@ -264,7 +264,7 @@ int caching_read(const char *path, char *buf, size_t size,
 
     // else read it from the disk
     // for each block, store it in the cache and add it to the buffer
-    for (int block = first_block ; block < num_of_blocks ; block++)
+    for (int block = first_block ; block < (num_of_blocks + 1) ; block++)
     {
         cout << "      && reading block " << block << " from disk." << endl; // todo remove
         int block_offset = block * block_size;
@@ -278,12 +278,12 @@ int caching_read(const char *path, char *buf, size_t size,
         blockID.second = block;
 
         // find this key in the cache
-        CacheChain::iterator chainBlock = cacheManager->findBlock(blockID);
+        CacheChain::iterator foundBlock = cacheManager->findBlock(blockID);
 
         // if the key exsist, retrive it
-        if (chainBlock != nullptr)
+        if (*foundBlock == nullptr)
         {
-            CacheBlock cacheBlock = *(*chainBlock);
+            CacheBlock cacheBlock = *(*foundBlock);
             char *block_buf = cacheBlock.getBuff();
             if (size < block_size)
             {
