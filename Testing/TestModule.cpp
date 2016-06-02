@@ -163,22 +163,26 @@ void FuseTester::renamrTest() {
 }
 
 CacheManager CacheTester::initTest() {
-    std::cout<<"construct a CacheManager with parameters:";
-    CacheManager m = CacheManager(100, 10, 0.33, 0.33);
+    std::cout<<"construct a CacheManager with parameters: 100, 10, 0.5, 0"
+            ".5" << std::endl;
+    return CacheManager(100, 10, 0.5, 0.5);
 
 }
 
 
 int main ()
 {
-    FuseTester fuseTester;
+//    FuseTester fuseTester;
+//
+//    fuseTester.accessTest();
+//    fuseTester.getattrTest();
+//    fuseTester.readdirTest();
+//    fuseTester.opendirTest();
+//    fuseTester.openTest();
+//    fuseTester.renamrTest();
 
-    fuseTester.accessTest();
-    fuseTester.getattrTest();
-    fuseTester.readdirTest();
-    fuseTester.opendirTest();
-    fuseTester.openTest();
-    fuseTester.renamrTest();
+    CacheTester cacheTester;
+    CacheManager m = cacheTester.initTest();
 
     return 0;
 }

@@ -10,6 +10,7 @@ CacheBlock::CacheBlock(int fileId, int blockNumber, char *buff) {
     this->fileId = fileId;
     this->blockNumber = blockNumber;
     this->buff = buff;
+    this->section = Section(newSection);
 }
 
 /**

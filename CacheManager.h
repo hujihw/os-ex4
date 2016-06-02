@@ -77,6 +77,7 @@ public:
 
 
 private:
+
     // data members
     int numberOfBlocks;
     int blockSize;

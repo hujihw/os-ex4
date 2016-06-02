@@ -46,11 +46,16 @@ CacheManager::~CacheManager() {
  */
 CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
     auto got = blocksMap.find(blockID);
-
     if (got == blocksMap.end()){
         // the block is not in the map
         return got->second; // todo test if this fails, check what is the-value of second
     }
+    // move the block to the head and update its section atrr
+
+    // increment the blocks refcount
+    // correct the relevant bounds and update the section atrr
+
+
     return got->second;
 }
 
@@ -73,12 +78,10 @@ char *CacheManager::retrieveBuffer(BlockID blockID) {
  */
 void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
     CacheBlock* block = new CacheBlock(fileDesc, blockNumber, buff);
-
-    // todo remove tail, and move the boundaries
-
+    // remove the relevant block from the old section
+    // correct the both boundaries and update section atrr
     cacheChain.emplace_front(block);
     blocksMap[block->getBlockId()] = cacheChain.begin();
 
 }
-
 

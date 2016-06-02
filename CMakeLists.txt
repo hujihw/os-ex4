@@ -17,5 +17,5 @@ endif (${FUSE_FOUND})
 
 
 # recipe for testing file
-set(SOURCE_FILES Testing/TestModule.cpp Testing/TestModule.h)
+set(SOURCE_FILES Testing/TestModule.cpp Testing/TestModule.h CacheManager.cpp CacheBlock.cpp CacheBlock.h CacheManager.h)
 add_executable(TestModule ${SOURCE_FILES})

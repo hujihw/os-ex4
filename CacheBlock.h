@@ -5,7 +5,8 @@
 
 #include <limits.h>
 #include <utility>
-//#include "CacheManager.h"
+
+enum Section {newSection, middleSection, oldSection};
 
 // the fileId and the block number
 typedef std::pair<int, int> BlockID;
@@ -19,7 +20,7 @@ public:
     /**
      * @brief constructor, initializes the refCount to 1.
      */
-    CacheBlock(int fileId, int blockNumber, char* buff);
+    CacheBlock(int fileId, int blockNumber, char *buff);
 
     /**
      * @brief getter to the counter of times the block was called.
@@ -57,6 +58,7 @@ private:
     int blockNumber;
     int fileId;
     char* buff;
+    Section section;
 };
 
 #endif //EX4_CACHEBLOCK_H
