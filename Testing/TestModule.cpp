@@ -162,6 +162,11 @@ void FuseTester::renamrTest() {
     zeroErrno();
 }
 
+CacheManager CacheTester::initTest(int numberOfBlocks, int blockSize, int fOld,
+                                   int fNew) {
+    return CacheManager(numberOfBlocks, blockSize, fOld, fNew);
+}
+
 
 int main ()
 {
@@ -176,3 +181,6 @@ int main ()
 
     return 0;
 }
+
+
+

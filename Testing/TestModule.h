@@ -1,6 +1,7 @@
 // TestModule.h
 
 #include <sys/stat.h>
+#include "../CacheManager.h"
 
 #ifndef EX4_TESTMODULE_H
 #define EX4_TESTMODULE_H
@@ -28,7 +29,10 @@ public:
 
 class CacheTester {
 public:
-    
+    CacheManager initTest(int numberOfBlocks, int blockSize, int fOld, int
+    fNew);
+
+
 };
 
 
