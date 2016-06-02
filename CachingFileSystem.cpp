@@ -286,20 +286,19 @@ int caching_read(const char *path, char *buf, size_t size,
         blockID.second = block;
 
         // find this key in the cache
-        CacheChain::iterator foundBlock = cacheManager->findBlock(blockID);
+        char* foundBuffer = cacheManager->retrieveBuffer(blockID);
 
         // if the key exsist, retrive it
-        if ((*foundBlock) == nullptr)
+        if (foundBuffer != nullptr)
         {
             cout << "   @@ block found in cache!" << endl; // todo remove
-            CacheBlock cacheBlock = *(*foundBlock);
-            char *block_buf = cacheBlock.getBuff();
+
             if (size < block_size)
             {
                 read_size = (int) size;
             }
 
-            memcpy(buf, block_buf, read_size);
+            memcpy(buf, foundBuffer, read_size);
             res += read_size;
             size -= read_size;
         }
