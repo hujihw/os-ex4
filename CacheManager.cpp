@@ -11,6 +11,13 @@ CacheManager::CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew
           cacheChain(){ }
 
 /**
+ * @brief destructor for the CacheManager class.
+ */
+CacheManager::~CacheManager() {
+    cacheChain.clear();
+}
+
+/**
  * @brief Find the given block in cache
  * returns nullptr if the block was not found
  */
@@ -41,8 +48,8 @@ char *CacheManager::retrieveBuffer(BlockID blockID) {
 /**
  * @brief Insert a new block to the cache.
  */
-void CacheManager::insertBlock(CacheBlock *block) {
-
+void CacheManager::insertBlock(int fileDesc, int blockNumber, char *buff) {
+    CacheBlock* block = new CacheBlock(fileDesc, blockNumber, buff);
 
     // todo remove tail, and move the boundaries
 
@@ -50,16 +57,5 @@ void CacheManager::insertBlock(CacheBlock *block) {
     blocksMap[block->getBlockId()] = cacheChain.begin();
 
 }
-
-
-
-
-
-
-
-
-
-
-
 
 

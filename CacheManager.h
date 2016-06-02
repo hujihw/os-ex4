@@ -34,7 +34,7 @@ namespace std
 // the file descriptor and the block number
 typedef std::pair<int, int> BlockID;
 
-typedef std::list<CacheBlock*> CacheChain; // TODO check necessity of *
+typedef std::list<CacheBlock *> CacheChain; // TODO check necessity of *
 
 typedef std::unordered_map<BlockID, CacheChain::iterator> BlocksMap;
 
@@ -47,6 +47,11 @@ public:
     CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew);
 
     /**
+     * @brief destructor for the CacheManager class.
+     */
+    ~CacheManager();
+
+/**
      * @brief Find the given block in cache
      * returns nullptr if the block was not found
      */
@@ -62,7 +67,7 @@ public:
     /**
      * @brief Insert a new block to the cache.
      */
-    void insertBlock(CacheBlock *block);
+    void insertBlock(int fileDesc, int blockNumber, char *buff);
 
 
     /**
