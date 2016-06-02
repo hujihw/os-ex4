@@ -44,7 +44,7 @@ public:
     /**
      * @brief constructor for the CacheManager class.
      */
-    CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew);
+    CacheManager(int numberOfBlocks, int blockSize, double fOld, double fNew);
 
     /**
      * @brief destructor for the CacheManager class.
@@ -83,7 +83,7 @@ private:
     BlocksMap blocksMap;
     CacheChain cacheChain;
     CacheChain::iterator middleSection; // the first block in the middle section
-    CacheChain::iterator oldsection; // the first block in te old section
+    CacheChain::iterator oldSection; // the first block in te old section
 };
 
 

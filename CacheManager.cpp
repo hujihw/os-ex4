@@ -1,14 +1,37 @@
 // CacheManager.cpp
 
+#include <cmath>
+#include <iostream>
 #include "CacheManager.h"
 
 
 /**
  * @brief constructor for the CacheManager class.
  */
-CacheManager::CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew)
+CacheManager::CacheManager(int numberOfBlocks, int blockSize, double fOld,
+                           double fNew)
         : numberOfBlocks(numberOfBlocks), blockSize(blockSize), blocksMap(),
-          cacheChain(){ }
+          cacheChain(){
+    int newSectionSize = (int) floor(fNew * numberOfBlocks);
+    int oldSectionSize = (int) floor(fOld * numberOfBlocks);
+
+    // this int can be zero
+    int middleSectionSize = numberOfBlocks - newSectionSize - oldSectionSize;
+
+    // fills the list with nullptr, newSectionSize +1 times.
+    cacheChain.assign((unsigned long) newSectionSize + 1, nullptr);
+    middleSection = cacheChain.end();
+
+    // fills the list with nullptr, middleSectionSize times. could be zero
+    cacheChain.assign((unsigned long) middleSectionSize, nullptr);
+    oldSection = cacheChain.end();
+
+    // fills the list with nullptr, oldSectionSize -1 times.
+    cacheChain.assign((unsigned long) oldSectionSize - 1, nullptr);
+
+    std::cout<<"the size of the sections are:" << newSectionSize << ", " <<
+            middleSectionSize << ", "<<oldSectionSize<< std::endl;
+}
 
 /**
  * @brief destructor for the CacheManager class.

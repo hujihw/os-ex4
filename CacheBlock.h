@@ -7,7 +7,7 @@
 #include <utility>
 //#include "CacheManager.h"
 
-// the file descriptor and the block number
+// the fileId and the block number
 typedef std::pair<int, int> BlockID;
 
 /**
@@ -19,7 +19,7 @@ public:
     /**
      * @brief constructor, initializes the refCount to 1.
      */
-    CacheBlock(int fileDesc, int blockNumber, char* buff);
+    CacheBlock(int fileId, int blockNumber, char* buff);
 
     /**
      * @brief getter to the counter of times the block was called.
@@ -43,9 +43,9 @@ public:
     char * getBuff() const;
 
     /**
-     * @brief getter for the file descriptor
+     * @brief getter for the file id
      */
-    int getFileDescriptor() const;
+    int getFileId() const;
 
     /**
      * @brief getter for the block id of the block
@@ -55,7 +55,7 @@ public:
 private:
     int refCount;
     int blockNumber;
-    int fileDesc;
+    int fileId;
     char* buff;
 };
 

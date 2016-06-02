@@ -5,9 +5,9 @@
 /**
  * @brief constructor, initializes the refCount to 1.
  */
-CacheBlock::CacheBlock(int fileDesc, int blockNumber, char *buff) {
+CacheBlock::CacheBlock(int fileId, int blockNumber, char *buff) {
     refCount = 1;
-    this->fileDesc = fileDesc;
+    this->fileId = fileId;
     this->blockNumber = blockNumber;
     this->buff = buff;
 }
@@ -42,17 +42,17 @@ char *CacheBlock::getBuff() const {
 }
 
 /**
- * @brief getter for the file descriptor
+ * @brief getter for the fileId
  */
-int CacheBlock::getFileDescriptor() const {
-    return fileDesc;
+int CacheBlock::getFileId() const {
+    return fileId;
 }
 
 /**
  * @brief getter for the block id of the block
  */
 BlockID CacheBlock::getBlockId() const {
-    return std::pair<int, int>(fileDesc, blockNumber);
+    return std::pair<int, int>(fileId, blockNumber);
 }
 
 
