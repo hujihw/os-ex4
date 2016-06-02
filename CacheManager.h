@@ -44,7 +44,7 @@ public:
     /**
      * @brief constructor for the CacheManager class.
      */
-    CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew);
+    CacheManager(int numberOfBlocks, int blockSize, double fOld, double fNew);
 
     /**
      * @brief destructor for the CacheManager class.

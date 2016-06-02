@@ -29,8 +29,7 @@ public:
 
 class CacheTester {
 public:
-    CacheManager initTest(int numberOfBlocks, int blockSize, int fOld, int
-    fNew);
+    CacheManager initTest();
 
 
 };
