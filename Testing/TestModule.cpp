@@ -169,6 +169,10 @@ CacheManager CacheTester::initTest() {
 
 }
 
+void CacheTester::test1() {
+
+}
+
 
 int main ()
 {
@@ -183,6 +187,7 @@ int main ()
 
     CacheTester cacheTester;
     CacheManager m = cacheTester.initTest();
+    m.insertBlock(1, 1, (char *) "test");
 
     return 0;
 }
