@@ -51,18 +51,17 @@ public:
      */
     ~CacheManager();
 
-/**
-     * @brief Find the given block in cache
-     * returns nullptr if the block was not found
-     */
-    CacheChain::iterator findBlock(BlockID blockID);
-
     /**
      * @brief Retrieve a block's buffer from the cache
      * returns nullptr if the block was not found
      */
-    char *retrieveBuffer(BlockID blockID); // TODO should i return a pointer
-    //  TODO to the char * ??
+    char *retrieveBuffer(BlockID blockID);
+
+    /**
+     * @brief Retrieve a block's file id from the cache
+     * returns zero if the block was not found
+     */
+    int retrieveFileId(BlockID blockID);
 
     /**
      * @brief Insert a new block to the cache.
@@ -71,17 +70,17 @@ public:
 
 
     /**
-     * @brief Move a block to the head of the list, and change relevant pointers.
-     */
-//    void moveToHead(BlockID blockID);
-
-    /**
      * @brief returns an iterator to the end of the cache. for checking if
-     * the find method was succesful
+     * the find method was successful
      */
     CacheChain::iterator getCacheEnd();
 
 private:
+    /**
+     * @brief Find the given block in cache
+     * returns cacheChain.end() if the block was not found
+     */
+    CacheChain::iterator findBlock(BlockID blockID);
 
     // data members
     int numberOfBlocks;
