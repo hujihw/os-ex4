@@ -46,15 +46,27 @@ CacheManager::~CacheManager() {
  */
 CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
     auto got = blocksMap.find(blockID);
+
     if (got == blocksMap.end()){
         // the block is not in the map
-        return got->second; // todo test if this fails, check what is the-value of second
+        return cacheChain.end(); // todo test if this fails, check what is
+        // the-value of second
     }
-    // move the block to the head and update its section atrr
+    auto blockIter = got->second;
+
+    // move the block to the head and update its section attribute to newSection
+    cacheChain.push_front(*blockIter); //put at head
+    cacheChain.erase(blockIter); // erase from original location
+    (*blockIter)->setSection(newSection); // set the
+    blocksMap[blockID] = cacheChain.begin();
 
     // increment the blocks refcount
-    // correct the relevant bounds and update the section atrr
+    (*blockIter)->incrementRefCount();
 
+    // correct the relevant bounds and update the new bounds section attribute
+    if ((*blockIter)->getSection() == newSection){
+
+    }
 
     return got->second;
 }

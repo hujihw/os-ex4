@@ -53,6 +53,16 @@ public:
      */
     BlockID getBlockId() const;
 
+    /**
+     * @brief getter for the section type that the block is in
+     */
+    Section getSection() const;
+
+    /**
+     * @brief setter for the section type that the block is in
+     */
+    void setSection(Section section);
+
 private:
     int refCount;
     int blockNumber;

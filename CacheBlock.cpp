@@ -57,6 +57,16 @@ BlockID CacheBlock::getBlockId() const {
 }
 
 
+/**
+ * @brief getter for the section type that the block is in
+ */
+void CacheBlock::setSection(Section section) {
+    CacheBlock::section = section;
+}
 
-
-
+/**
+ * @brief setter for the section type that the block is in
+ */
+Section CacheBlock::getSection() const {
+    return section;
+}
