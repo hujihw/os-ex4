@@ -4,7 +4,11 @@
 #define EX4_CACHEBLOCK_H
 
 #include <limits.h>
-#include "CacheManager.h"
+#include <utility>
+//#include "CacheManager.h"
+
+// the file descriptor and the block number
+typedef std::pair<int, int> BlockID;
 
 /**
  * @brief This class represents a block in the cache.
@@ -15,7 +19,7 @@ public:
     /**
      * @brief constructor, initializes the refCount to 1.
      */
-    CacheBlock::CacheBlock(int fileDesc, int blockNumber, char* buff);
+    CacheBlock(int fileDesc, int blockNumber, char* buff);
 
     /**
      * @brief getter to the counter of times the block was called.

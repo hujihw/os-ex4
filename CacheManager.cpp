@@ -1,6 +1,5 @@
 // CacheManager.cpp
 
-#include <sys/stat.h>
 #include "CacheManager.h"
 
 
@@ -9,7 +8,7 @@
  */
 CacheManager::CacheManager(int numberOfBlocks, int blockSize, int fOld, int fNew)
         : numberOfBlocks(numberOfBlocks), blockSize(blockSize), blocksMap(),
-          cacheChain(), { }
+          cacheChain(){ }
 
 /**
  * @brief Find the given block in cache
@@ -20,7 +19,7 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
 
     if (got == blocksMap.end()){
         // the block is not in the map
-        return nullptr;
+        return got->second; // todo test if this fails, check what is the-value of second
     }
     return got->second;
 }
@@ -32,7 +31,7 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
 char *CacheManager::retrieveBuffer(BlockID blockID) {
     auto blockIter = findBlock(blockID);
 
-    if (blockIter == nullptr){
+    if (*blockIter == NULL){
         return nullptr;
     }
 
