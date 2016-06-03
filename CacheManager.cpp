@@ -137,10 +137,16 @@ int CacheManager::retrieveFileId(BlockID blockID) {
 /**
  * @brief Insert a new block to the cache.
  */
-void CacheManager::insertBlock(int fileDesc, int blockNumber, const char *buff){
-    // tODO find first the block and if it exists print the error and exit
+void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff){
 
-    CacheBlock* block = new CacheBlock(fileDesc, blockNumber, buff);
+    // find first the block and if it exists print the error and exit
+    if ((findBlock(BlockID(fileId, blockNumber)) != cacheChain.end())){
+        std::cerr<<"error: the block is already in the cache- can't insert "
+                "it"<<std::endl;
+        exit(1);
+    }
+
+    CacheBlock* block = new CacheBlock(fileId, blockNumber, buff);
     // put the new block at the top and update it in the map
     cacheChain.emplace_front(block);
     blocksMap[block->getBlockId()] = cacheChain.begin();
@@ -168,9 +174,6 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, const char *buff){
         }
         cacheChain.erase(eraseCandidateBlockIter);
     }
-
-
-
 }
 
 /**

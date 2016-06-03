@@ -225,9 +225,9 @@ int main ()
     }
 
     for (int i = 5; i < 120; i++){
-        const char * buff2 = ("test" + std::to_string(i)).c_str();
-//        const char * buff1 = "sdfsdf";
-        m.insertBlock(i, 1, buff2);
+//        const char * buff2 = ("test" + std::to_string(i)).c_str();
+        const char * buff1 = "test";
+        m.insertBlock(i, 1, buff1);
     }
     fileId = m.retrieveFileId(std::pair<int, int>(70, 1));
     std::cout<<"expected fileId: 70, got: "<<fileId<<std::endl;
@@ -235,7 +235,7 @@ int main ()
     if (buff == NULL){
         std::cout<<"got null"<<std::endl;
     } else {
-        std::cout << "expected buff: test70, got: " << buff << std::endl;
+        std::cout << "expected buff: test, got: " << buff << std::endl;
     }
 
     return 0;
