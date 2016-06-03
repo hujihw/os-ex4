@@ -173,6 +173,7 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
                 minimalReff = (*eraseCandidateBlockIter)->getRefCount();
             }
         }
+        blocksMap.erase((*eraseCandidateBlockIter)->getBlockId());
         cacheChain.erase(eraseCandidateBlockIter);
     }
 }

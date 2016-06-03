@@ -241,8 +241,6 @@ int main ()
     char * filePath1 = m.retrieveFilePath(std::pair<int, int>(1, 1));
     std::cout<<"expected filePath: newp, got: "<<filePath1<<std::endl;
 
-
-
     return 0;
 }
 
