@@ -41,18 +41,6 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
         i++;
     }
 
-
-//     fills the list with nullBlocks, newSectionSize +1 times.
-//    cacheChain.assign((unsigned long) newSectionSize + 1, nullBlock);
-//    middleSectionIter = cacheChain.end();
-//
-//    // fills the list with nullBlocks, middleSectionSize times. could be zero
-//    cacheChain.assign((unsigned long) middleSectionSize, nullBlock);
-//    oldSectionIter = cacheChain.end();
-//
-//    // fills the list with nullBlocks, oldSectionSize -1 times.
-//    cacheChain.assign((unsigned long) oldSectionSize - 1, nullBlock);
-
     std::cout<<"the size of the sections are:" << newSectionSize << ", " <<
             middleSectionSize << ", "<<oldSectionSize<< std::endl;
     std::cout<<"the first elements fileId of the sections are:" <<
@@ -168,10 +156,8 @@ void CacheManager::insertBlock(int fileDesc, int blockNumber, const char *buff){
         cacheChain.pop_back();
     }
     else{ //find the least referenced block in oldSection and remove it
-        std::cout<<middleSectionIter.operator*()->getFileId()<<std::endl;
-        std::cout<<oldSectionIter.operator*()->getFileId()<<std::endl;
 
-        int minimalReff = std::numeric_limits<int>::max();
+        int minimalReff = std::numeric_limits<int>::max(); // like inf
         CacheChain::iterator eraseCandidateBlockIter;
         for (CacheChain::iterator it=oldSectionIter; it != cacheChain.end();
              ++it){
