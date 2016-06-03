@@ -77,7 +77,6 @@ public:
 
     void updatePaths(const char* pathPrefix, const char * newPathPrefix);
 
-    CacheChain cacheChain; //todo move to private
 private:
     /**
      * @brief Find the given block in cache
@@ -88,7 +87,7 @@ private:
     // data members
     int numberOfBlocks;
     BlocksMap blocksMap;
-
+    CacheChain cacheChain;
     CacheChain::iterator middleSectionIter; // the first block in the middle section
     CacheChain::iterator oldSectionIter; // the first block in te old section
 };
