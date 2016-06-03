@@ -163,9 +163,9 @@ void FuseTester::renamrTest() {
 }
 
 CacheManager CacheTester::initTest() {
-    std::cout<<"construct a CacheManager with parameters: 100, 10, 0.33, 0"
-            ".33" << std::endl;
-    return CacheManager(100, 10, 0.33, 0.33);
+    std::cout<<"construct a CacheManager with parameters: 50, 10, 0.4, 0"
+            ".4" << std::endl;
+    return CacheManager(50, 10, 0.4, 0.4);
 
 }
 
@@ -183,22 +183,59 @@ int main ()
 
     CacheTester cacheTester;
     CacheManager m = cacheTester.initTest();
-    m.insertBlock(1, 1, (char *) "test");
+
+    m.insertBlock(1, 1, (char *) "test1");
     int fileId = m.retrieveFileId(std::pair<int, int>(1, 1));
     std::cout<<"expected fileId: 1, got: "<<fileId<<std::endl;
     const char* buff = m.retrieveBuffer(std::pair<int, int>(1, 1));
-    std::cout<<"expected buff: test, got: "<<buff<<std::endl;
-
-    for (int i = 2; i < 102; i++){
-        const char * buff2 = ("test" + std::to_string(i)).data();
-        const char * buff1 = "sdfsdf";
-        m.insertBlock(1, i, buff1);
-    }
-    const char* buff1 = m.retrieveBuffer(std::pair<int, int>(1, 5));
-    if (buff1 == NULL){
+    if (buff == NULL){
         std::cout<<"got null"<<std::endl;
     } else {
-        std::cout << "expected buff: sdfsdf, got: " << buff1 << std::endl;
+        std::cout << "expected buff: test1, got: " << buff << std::endl;
+    }
+
+    m.insertBlock(2, 1, (char *) "test2");
+    fileId = m.retrieveFileId(std::pair<int, int>(2, 1));
+    std::cout<<"expected fileId: 2, got: "<<fileId<<std::endl;
+    buff = m.retrieveBuffer(std::pair<int, int>(2, 1));
+    if (buff == NULL){
+        std::cout<<"got null"<<std::endl;
+    } else {
+        std::cout << "expected buff: test2, got: " << buff << std::endl;
+    }
+
+    m.insertBlock(3, 1, (char *) "test3");
+    fileId = m.retrieveFileId(std::pair<int, int>(3, 1));
+    std::cout<<"expected fileId: 3, got: "<<fileId<<std::endl;
+    buff = m.retrieveBuffer(std::pair<int, int>(3, 1));
+    if (buff == NULL){
+        std::cout<<"got null"<<std::endl;
+    } else {
+        std::cout << "expected buff: test3, got: " << buff << std::endl;
+    }
+
+    m.insertBlock(4, 1, (char *) "test4");
+    fileId = m.retrieveFileId(std::pair<int, int>(4, 1));
+    std::cout<<"expected fileId: 4, got: "<<fileId<<std::endl;
+    buff = m.retrieveBuffer(std::pair<int, int>(4, 1));
+    if (buff == NULL){
+        std::cout<<"got null"<<std::endl;
+    } else {
+        std::cout << "expected buff: test4, got: " << buff << std::endl;
+    }
+
+    for (int i = 5; i < 120; i++){
+        const char * buff2 = ("test" + std::to_string(i)).c_str();
+//        const char * buff1 = "sdfsdf";
+        m.insertBlock(i, 1, buff2);
+    }
+    fileId = m.retrieveFileId(std::pair<int, int>(70, 1));
+    std::cout<<"expected fileId: 70, got: "<<fileId<<std::endl;
+    buff = m.retrieveBuffer(std::pair<int, int>(70, 1));
+    if (buff == NULL){
+        std::cout<<"got null"<<std::endl;
+    } else {
+        std::cout << "expected buff: test70, got: " << buff << std::endl;
     }
 
     return 0;
