@@ -25,15 +25,56 @@ static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile i
 
 static CacheManager *cacheManager;
 struct fuse_operations caching_oper;
+
+// -------------------------------------------------------------------------- //
+//                todo move this section to CacheManager.cpp                  //
+// -------------------------------------------------------------------------- //
+
 static std::map<ino_t, char*> *inotToPath;
 
 /**
  * @brief add an ino_t to the map of paths
  */
-void add_ino_t(ino_t ino, char *fpath)
+void add_ino_t(ino_t ino, char *path)
 {
-    inotToPath->at(*fpath);
+    inotToPath->at(ino) = path;
 }
+
+/**
+ * @brief remove a pair from the map
+ */
+void remove_ino_t(ino_t ino)
+{
+    inotToPath->erase(ino);
+}
+
+/**
+ * @brief rename a path in the map values
+ */
+void rename_path(ino_t ino, char *path, char *npath)
+{
+    // convert parameters to cpp string
+    string s_path = path;
+    string s_npath = npath;
+
+    // find 'path' in the values
+    for (auto iterator = inotToPath->begin(); iterator != inotToPath->end(); iterator ++)
+    {
+        string p = iterator->second;
+
+        if (p.find(s_path))
+        {
+            size_t p_size = s_path.size();
+            p.replace(0, p_size, s_npath);
+        }
+
+        // replace 'path' with 'npath'
+        inotToPath->at(ino) = (char *) p.c_str();
+    }
+
+}
+
+// -------------------------------------------------------------------------- //
 
 /**
  * @brief Check if trying to refer to the logfile from the filesystem
@@ -228,7 +269,7 @@ int caching_read(const char *path, char *buf, size_t size,
 
     int res = 0;
 
-    size_t bytesToRead = size;
+    size_t bytes_to_read = size;
 
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
@@ -286,22 +327,23 @@ int caching_read(const char *path, char *buf, size_t size,
         blockID.second = block;
 
         // find this key in the cache
-        CacheChain::iterator foundBlock = cacheManager->findBlock(blockID);
+        const char* foundBuffer = cacheManager->retrieveBuffer(blockID);
 
         // if the key exsist, retrive it
-        if ((*foundBlock) == nullptr)
+        if (foundBuffer != nullptr)
         {
             cout << "   @@ block found in cache!" << endl; // todo remove
-            CacheBlock cacheBlock = *(*foundBlock);
-            char *block_buf = cacheBlock.getBuff();
-            if (size < block_size)
+
+            if (bytes_to_read < block_size)
             {
                 read_size = (int) size;
             }
 
-            memcpy(buf, block_buf, read_size);
+            memcpy(buf, foundBuffer, read_size);
             res += read_size;
-            size -= read_size;
+            bytes_to_read -= read_size;
+
+            continue;
         }
 
         // allocate memory for each block
@@ -315,11 +357,12 @@ int caching_read(const char *path, char *buf, size_t size,
 
         cout << "read_size " << read_size << endl; // todo remove
         // store in cache // todo
+        cacheManager->insertBlock((int) st.st_ino, block, block_buf);
 
         // add the data to buf
         memcpy(buf, block_buf, read_size);
 
-        size -= read_size;
+        bytes_to_read -= read_size;
 
         res += read_size;
     }
@@ -642,7 +685,7 @@ int main(int argc, char* argv[]){
 
 //    int numberOfBlocks, int blockSize, int fOld, int fNew // todo remove
     // create a cache manager instance
-    CacheManager *cm = new CacheManager(100, 512, 0.2, 0.2);
+    CacheManager *cm = new CacheManager(100, 4096, 0.2, 0.2);
     cacheManager = cm;
 
     init_caching_oper();
