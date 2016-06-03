@@ -357,7 +357,7 @@ int caching_read(const char *path, char *buf, size_t size,
 
         cout << "read_size " << read_size << endl; // todo remove
         // store in cache // todo
-        cacheManager->insertBlock((int) st.st_ino, block, block_buf);
+        cacheManager->insertBlock((int) st.st_ino, block, block_buf, nullptr);
 
         // add the data to buf
         memcpy(buf, block_buf, read_size);

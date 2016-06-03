@@ -5,12 +5,14 @@
 /**
  * @brief constructor, initializes the refCount to 1.
  */
-CacheBlock::CacheBlock(int fileId, int blockNumber, const char *buff) {
+CacheBlock::CacheBlock(int fileId, int blockNumber, const char *buff,
+                       char *path) {
     refCount = 1;
     this->fileId = fileId;
     this->blockNumber = blockNumber;
     this->buff = buff;
     this->section = Section(newSection);
+    this->path = path;
 }
 
 /**
@@ -69,4 +71,18 @@ void CacheBlock::setSection(Section section) {
  */
 Section CacheBlock::getSection() const {
     return section;
+}
+
+/**
+ * @brief getter for the file path
+ */
+char* CacheBlock::getPath() const {
+    return path;
+}
+
+/**
+ * @brief setter for the file path
+ */
+void CacheBlock::setPath(char* path) {
+    CacheBlock::path = path;
 }

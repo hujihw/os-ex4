@@ -22,7 +22,7 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
 
     // fills the list with nullBlocks, numberOfBlocks times
     for (int i = 1; i <= numberOfBlocks; i++){
-        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr); // todo maybe-not new
+        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr, nullptr); // todo maybe-not new
         cacheChain.push_front(nullBlock);
     }
 
@@ -124,20 +124,21 @@ const char * CacheManager::retrieveBuffer(BlockID blockID) {
  * @brief Retrieve a block's file id from the cache
  * returns zero if the block was not found
  */
-int CacheManager::retrieveFileId(BlockID blockID) {
+char * CacheManager::retrieveFilePath(BlockID blockID) {
     auto blockIter = findBlock(blockID);
 
     if (blockIter == cacheChain.end()){
         return BLOCK_NOT_FOUND;
     }
 
-    return (*blockIter)->getFileId();
+    return (*blockIter)->getPath();
 }
 
 /**
  * @brief Insert a new block to the cache.
  */
-void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff){
+void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
+                               char *path) {
 
     // find first the block and if it exists print the error and exit
     if ((findBlock(BlockID(fileId, blockNumber)) != cacheChain.end())){
@@ -146,7 +147,7 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff){
         exit(1);
     }
 
-    CacheBlock* block = new CacheBlock(fileId, blockNumber, buff);
+    CacheBlock* block = new CacheBlock(fileId, blockNumber, buff, path);
     // put the new block at the top and update it in the map
     cacheChain.emplace_front(block);
     blocksMap[block->getBlockId()] = cacheChain.begin();
@@ -182,4 +183,24 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff){
  */
 CacheChain::iterator CacheManager::getCacheEnd() {
     return cacheChain.end();
+}
+
+/**
+ * @brief update the path of files in the given path prefix
+ */
+void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefix) {
+    for (CacheChain::iterator it = cacheChain.begin(); it !=
+                                                       cacheChain.end(); it++){
+        if ((*it)->getFileId() == NULL_BLOCK){
+            continue;
+        }
+        if (strncmp((*it)->getPath(), pathPrefix, strlen(pathPrefix)) == 0){
+            std::string oldPath = (*it)->getPath();
+            std::string prefix = newPathPrefix;
+            std::string resPath = oldPath;
+
+            resPath.replace(0, prefix.length(), prefix);
+            (*it)->setPath((char *) resPath.c_str());
+        }
+    }
 }

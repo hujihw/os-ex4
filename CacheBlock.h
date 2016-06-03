@@ -5,6 +5,7 @@
 
 #include <limits.h>
 #include <utility>
+#include <string>
 
 enum Section {newSection, middleSection, oldSection};
 
@@ -20,7 +21,8 @@ public:
     /**
      * @brief constructor, initializes the refCount to 1.
      */
-    CacheBlock(int fileId, int blockNumber, const char *buff);
+    CacheBlock(int fileId, int blockNumber, const char *buff,
+               char *path);
 
     /**
      * @brief getter to the counter of times the block was called.
@@ -63,12 +65,24 @@ public:
      */
     void setSection(Section section);
 
+    /**
+     * @brief getter for the file path
+     */
+    char* getPath() const;
+
+    /**
+     * @brief setter for the file path
+     */
+    void setPath(char * path);
+
 private:
     int refCount;
     int blockNumber;
     int fileId;
     const char* buff;
     Section section;
+    char * path;
+
 };
 
 #endif //EX4_CACHEBLOCK_H

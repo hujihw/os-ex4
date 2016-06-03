@@ -7,6 +7,7 @@
 #include <list>
 #include <string>
 #include <functional>
+#include <string.h>
 #include "CacheBlock.h"
 
 
@@ -61,12 +62,12 @@ public:
      * @brief Retrieve a block's file id from the cache
      * returns zero if the block was not found
      */
-    int retrieveFileId(BlockID blockID);
+    char * retrieveFilePath(BlockID blockID);
 
     /**
      * @brief constructs a new block and adds it to the cache.
      */
-    void insertBlock(int fileDesc, int blockNumber,  const char *buff);
+    void insertBlock(int fileDesc, int blockNumber, const char *buff, char *path);
 
     /**
      * @brief returns an iterator to the end of the cache. for checking if
@@ -74,6 +75,9 @@ public:
      */
     CacheChain::iterator getCacheEnd();
 
+    void updatePaths(const char* pathPrefix, const char * newPathPrefix);
+
+    CacheChain cacheChain; //todo move to private
 private:
     /**
      * @brief Find the given block in cache
@@ -84,7 +88,7 @@ private:
     // data members
     int numberOfBlocks;
     BlocksMap blocksMap;
-    CacheChain cacheChain;
+
     CacheChain::iterator middleSectionIter; // the first block in the middle section
     CacheChain::iterator oldSectionIter; // the first block in te old section
 };
