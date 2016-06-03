@@ -11,10 +11,8 @@
 /**
  * @brief constructor for the CacheManager class.
  */
-CacheManager::CacheManager(int numberOfBlocks, int blockSize, double fOld,
-                           double fNew)
-        : numberOfBlocks(numberOfBlocks), blockSize(blockSize), blocksMap(),
-          cacheChain(){
+CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
+        : numberOfBlocks(numberOfBlocks), blocksMap(), cacheChain(){
 
     int newSectionSize = (int) floor(fNew * numberOfBlocks);
     int oldSectionSize = (int) floor(fOld * numberOfBlocks);

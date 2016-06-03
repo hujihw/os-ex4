@@ -685,7 +685,7 @@ int main(int argc, char* argv[]){
 
 //    int numberOfBlocks, int blockSize, int fOld, int fNew // todo remove
     // create a cache manager instance
-    CacheManager *cm = new CacheManager(100, 4096, 0.2, 0.2);
+    CacheManager *cm = new CacheManager(100, 0.2, 0.2);
     cacheManager = cm;
 
     init_caching_oper();

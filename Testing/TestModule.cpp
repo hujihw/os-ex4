@@ -165,7 +165,7 @@ void FuseTester::renamrTest() {
 CacheManager CacheTester::initTest() {
     std::cout<<"construct a CacheManager with parameters: 50, 10, 0.4, 0"
             ".4" << std::endl;
-    return CacheManager(50, 10, 0.4, 0.4);
+    return CacheManager(50, 0.4, 0.4);
 
 }
 
