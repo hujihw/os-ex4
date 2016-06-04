@@ -306,13 +306,17 @@ int caching_read(const char *path, char *buf, size_t size,
     int file_size = (int) st.st_size;
     int block_size = (int) st.st_blksize;
 
+    cout << "offset: " << offset << endl; // todo remove
+
     // if the offset is negative or greater than size, return 0
-    if (offset < 0 || file_size < offset)
+    if ((offset < 0) || (file_size <= offset))
     {
         return 0;
     }
 
-    if (file_size + offset < size)
+    // if the file is smaller than the size to read,
+    // take size to read as the file size
+    if ((size_t) (file_size + offset) < size)
     {
         size = (size_t) file_size;
     }
@@ -367,7 +371,7 @@ int caching_read(const char *path, char *buf, size_t size,
         cout << "bytes_to_read " << bytes_to_read << endl; // todo remove
         cout << "read_bytes " << read_bytes << endl; // todo remove
         // update the number of bytes to read if it's less than a block size
-        if (bytes_to_read < read_bytes)
+        if (bytes_to_read < (size_t) read_bytes)
         {
             cout << "bytes_to_read < read_bytes" << endl;
             read_bytes = bytes_to_read;
