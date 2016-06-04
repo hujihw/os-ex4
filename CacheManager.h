@@ -80,7 +80,7 @@ public:
     /**
      * @brief prints the cache blocks from top to bottom
      */
-    std::string CacheToString();
+    std::string cacheToString();
 
 private:
     /**

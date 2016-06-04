@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include "CacheManager.h"
 
 #define BLOCK_NOT_FOUND 0
@@ -201,7 +202,7 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
             std::string resPath = oldPath;
 
             resPath.replace(0, prefix.length(), prefix);
-            (*it)->setPath((char *) resPath.c_str());
+            (*it)->setPath((char *) resPath.data());
         }
     }
 }
@@ -209,18 +210,17 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
 /**
  * @brief prints the cache blocks from top to bottom
  */
-std::string CacheManager::CacheToString() {
-    std::string cacheStr;
+std::string CacheManager::cacheToString() {
+    std::stringstream cacheStrStream;
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
             .end(); it++) {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
-            cacheStr.append((*it)->getPath());
-            cacheStr.append(" ");
-            cacheStr.append((std::to_string((*it)->getBlockNumber() + 1)));
-            cacheStr.append(" ");
-            cacheStr.append(std::to_string((*it)->getRefCount()));
-            cacheStr.append("\n");
+//            std::cout<<(*it)->getPath()<<std::endl;
+            cacheStrStream<<((*it)->getPath())<<" "<<(std::to_string((*it)
+              ->getBlockNumber() + 1))<<" "
+            <<std::to_string((*it)->getRefCount())<<"\n";
         }
     }
-    return cacheStr;
+
+    return cacheStrStream.str();
 }

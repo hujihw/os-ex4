@@ -1,5 +1,6 @@
 // CacheBlock.cpp
 
+#include <iostream>
 #include "CacheBlock.h"
 
 /**
@@ -12,8 +13,11 @@ CacheBlock::CacheBlock(int fileId, int blockNumber, const char *buff,
     this->blockNumber = blockNumber;
     this->buff = buff;
     this->section = Section(newSection);
-    this->path = path;
+    if (path != nullptr) {
+        this->path.append(path);
+    }
 }
+
 
 /**
  * @brief getter to the counter of times the block was called.
@@ -77,7 +81,7 @@ Section CacheBlock::getSection() const {
  * @brief getter for the file path
  */
 char* CacheBlock::getPath() const {
-    return path;
+    return (char *) path.c_str();
 }
 
 /**

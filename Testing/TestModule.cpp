@@ -163,8 +163,9 @@ void FuseTester::renamrTest() {
 }
 
 CacheManager CacheTester::initTest() {
-    std::cout<<"construct a CacheManager with parameters: 200, 0.4, 0.4" << std::endl;
-    return CacheManager(200, 0.4, 0.4);
+    std::cout<<"construct a CacheManager with parameters: 60, 0.4, 0.4" <<
+            std::endl;
+    return CacheManager(60, 0.4, 0.4);
 
 }
 
@@ -250,6 +251,7 @@ int main ()
         std::cout << "expected filePath: newpherPath, got: " << filePath1 <<
         std::endl;
     }
+    std::cout<< m.cacheToString();
 
     return 0;
 }

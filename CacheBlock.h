@@ -81,7 +81,7 @@ private:
     int fileId;
     const char* buff;
     Section section;
-    char * path;
+    std::string path;
 
 };
 
