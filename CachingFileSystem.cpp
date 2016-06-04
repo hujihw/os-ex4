@@ -6,15 +6,18 @@
 
 #define FUSE_USE_VERSION 26
 
+#include <errno.h>
 
 #include <iostream>
 #include <map>
+#include <fcntl.h>
 #include <stdio.h>
 #include <fuse.h>
 #include <unistd.h>
 #include <memory.h>
 #include <dirent.h>
 #include <cmath>
+#include <sys/ioctl.h>
 #include "logManager.h"
 #include "CacheManager.h"
 
@@ -131,9 +134,13 @@ int caching_getattr(const char *path, struct stat *statbuf){
         return res;
     }
 
+    // reset statbuf
+    memset(statbuf, 0, sizeof(struct stat));
+
     // forward the call and log it
     log_call("lstat");
     res = lstat(fpath, statbuf);
+//    memset();
 
     // return errno in case of error
     if (res < 0)
@@ -271,14 +278,18 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
 int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     cout << "-- read --" << endl; // todo remove
-
     size_t res = 0;
 
     // get the full path of the file
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
-    // if the file is the log, return no such file error todo
+    // if the file is the log, return no such file error
+    int log = refering_logfile(fpath);
+    if (log)
+    {
+        return -ENOENT;
+    }
 
     // if size is negative, return error
     if (size < 0)
@@ -301,10 +312,21 @@ int caching_read(const char *path, char *buf, size_t size,
         return 0;
     }
 
+    if (file_size + offset < size)
+    {
+        size = (size_t) file_size;
+    }
+
     // calculate first block and number of blocks
     int first_block = (int) (offset / block_size);
-    int number_of_blocks = (int) (size / block_size);
+    int number_of_blocks = (int) ceil(((double) size / (double) block_size));
     int last_block = first_block + number_of_blocks;
+
+    cout << "size / block_size " << (((double) size / (double) block_size)) << endl;
+    cout << "size: " << size << endl; // todo remove
+    cout << "file_size: " << file_size << endl; // todo remove
+    cout << "first_block: " << first_block << endl; // todo remove
+    cout << "last_block: " << last_block << endl; // todo remove
 
     // declare pointer buffer to store block data
     char *block_buf;
@@ -329,6 +351,9 @@ int caching_read(const char *path, char *buf, size_t size,
         // couldn't find the block in the cache
         if (block_buf == nullptr)
         {
+
+        cout << "wasn't found in cache" << endl; // todo remove
+
             // allocate space for data from the disk
             block_buf = (char *) aligned_alloc(block_size, block_size);
 
@@ -339,9 +364,12 @@ int caching_read(const char *path, char *buf, size_t size,
             cacheManager->insertBlock((int) st.st_ino, block, block_buf, fpath);
         }
 
+        cout << "bytes_to_read " << bytes_to_read << endl; // todo remove
+        cout << "read_bytes " << read_bytes << endl; // todo remove
         // update the number of bytes to read if it's less than a block size
         if (bytes_to_read < read_bytes)
         {
+            cout << "bytes_to_read < read_bytes" << endl;
             read_bytes = bytes_to_read;
         }
 
@@ -554,9 +582,11 @@ int caching_rename(const char *path, const char *newpath){
     }
 
     log_call("rename");
-    res = rename(fpath, fnewpath); // todo moove this line abobe the cache check?
+    res = rename(fpath, fnewpath);
 
-    // todo chack if file is cached, and rename the relevant blocks if it is
+    // chack if file is cached, and rename the relevant blocks if it is
+    cacheManager->updatePaths(fpath, fnewpath);
+
     return res;
 }
 
@@ -614,6 +644,9 @@ void caching_destroy(void *userdata){ // todo what this function does? (destroys
 int caching_ioctl (const char *, int cmd, void *arg,
         struct fuse_file_info *, unsigned int flags, void *data){
     cout << "-- ioctl --" << endl; // todo remove
+    log_call("ioctl");
+    ioctl_log((char *) cacheManager->cacheToString().c_str());
+
     return 0;
 }
 
@@ -706,10 +739,8 @@ int main(int argc, char* argv[]){
 
     struct cfs_state cfs_st;
 
-//    int numberOfBlocks, int blockSize, int fOld, int fNew // todo remove
     // create a cache manager instance
-    CacheManager *cm = new CacheManager(10000, 0.2, 0.2); //todo input args
-    cacheManager = cm;
+    cacheManager = new CacheManager(10000, 0.2, 0.2);
 
     init_caching_oper();
 

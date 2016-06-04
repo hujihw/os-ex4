@@ -35,4 +35,9 @@ FILE *open_log(char *logfile);
  */
 void log_call(const char *callName);
 
+/**
+ * @brief A function to print the cache status
+ */
+void ioctl_log(const char *cached_files);
+
 #endif //EX4_LOGMANAGER_H
