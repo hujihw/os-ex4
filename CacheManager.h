@@ -69,12 +69,10 @@ public:
      */
     void insertBlock(int fileDesc, int blockNumber, const char *buff, char *path);
 
-    /**
-     * @brief returns an iterator to the end of the cache. for checking if
-     * the find method was successful
-     */
-    CacheChain::iterator getCacheEnd();
 
+    /**
+     * @brief update the path of files in the given path prefix
+     */
     void updatePaths(const char* pathPrefix, const char * newPathPrefix);
 
     /**
