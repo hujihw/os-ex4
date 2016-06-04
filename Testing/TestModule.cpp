@@ -223,23 +223,33 @@ int main ()
         std::cout << "expected buff: test4, got: " << buff << std::endl;
     }
 
-    for (int i = 5; i < 120; i++){
+    for (int i = 5; i < 2000; i++){
 //        const char * buff2 = ("test" + std::to_string(i)).c_str();
         const char * buff1 = "test";
         m.insertBlock(i, 1, buff1, (char *) "anotherPath");
     }
-    filePath = m.retrieveFilePath(std::pair<int, int>(70, 1));
-    std::cout<<"expected filePath: anotherPath, got: "<<filePath<<std::endl;
-    buff = m.retrieveBuffer(std::pair<int, int>(70, 1));
+    filePath = m.retrieveFilePath(std::pair<int, int>(1980, 1));
+    if (filePath == nullptr){
+        std::cout<<"got null"<<std::endl;
+    } else {
+        std::cout << "expected filePath: anotherPath, got: " << filePath <<
+        std::endl;
+    }
+    buff = m.retrieveBuffer(std::pair<int, int>(1980, 1));
     if (buff == NULL){
         std::cout<<"got null"<<std::endl;
     } else {
         std::cout << "expected buff: test, got: " << buff << std::endl;
     }
 
-    m.updatePaths("path", "newp");
-    char * filePath1 = m.retrieveFilePath(std::pair<int, int>(1, 1));
-    std::cout<<"expected filePath: newp, got: "<<filePath1<<std::endl;
+    m.updatePaths("anot", "newp");
+    char * filePath1 = m.retrieveFilePath(std::pair<int, int>(1999, 1));
+    if (filePath1 == nullptr){
+        std::cout<<"got null"<<std::endl;
+    } else {
+        std::cout << "expected filePath: newpherPath, got: " << filePath1 <<
+        std::endl;
+    }
 
     return 0;
 }

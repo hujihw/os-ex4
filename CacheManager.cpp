@@ -128,7 +128,7 @@ char * CacheManager::retrieveFilePath(BlockID blockID) {
     auto blockIter = findBlock(blockID);
 
     if (blockIter == cacheChain.end()){
-        return BLOCK_NOT_FOUND;
+        return nullptr;
     }
 
     return (*blockIter)->getPath();
