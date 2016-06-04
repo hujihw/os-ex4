@@ -216,9 +216,9 @@ std::string CacheManager::CacheToString() {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
             cacheStr.append((*it)->getPath());
             cacheStr.append(" ");
-            cacheStr.append((const char *) ((*it)->getBlockNumber() + 1));
+            cacheStr.append((std::to_string((*it)->getBlockNumber() + 1)));
             cacheStr.append(" ");
-            cacheStr.append((const char *) (*it)->getRefCount());
+            cacheStr.append(std::to_string((*it)->getRefCount()));
             cacheStr.append("\n");
         }
     }
