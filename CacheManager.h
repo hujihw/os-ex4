@@ -77,6 +77,11 @@ public:
 
     void updatePaths(const char* pathPrefix, const char * newPathPrefix);
 
+    /**
+     * @brief prints the cache blocks from top to bottom
+     */
+    void printCache();
+
 private:
     /**
      * @brief Find the given block in cache

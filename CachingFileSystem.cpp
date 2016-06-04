@@ -20,6 +20,7 @@
 
 #define OPEN_FLAGS O_RDONLY | O_DIRECT | O_SYNC
 #define SUCCESS 0
+#define ARGS_NUM 6
 
 using namespace std;
 static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile in all functions
@@ -717,13 +718,49 @@ void init_caching_oper()
 //basic main. You need to complete it.
 int main(int argc, char* argv[]){
 
-    // todo verify number of arguments and their correctness, print usage message if wrong
+    // verify number of arguments and their correctness, print usage message
+    // if wrong
+    if (argc != ARGS_NUM)
+    {
+        cout <<"Usage: CachingFileSystem rootdir mountdir "
+                "numberOfBlocks fOld fNew" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    bool argsValidity = true;
+    int numberOfBlocks = stoi(argv[3]);
+    double fOld = stod(argv[4]);
+    double fNew = stod(argv[5]);
+
+    struct stat st_root, st_mount;
+    auto rootDir = realpath(argv[1], NULL);
+    auto mountDir = realpath(argv[2], NULL);
+    if((stat(rootDir ,&st_root) == 0) && (stat(mountDir, &st_mount) == 0)) {
+        if ((!S_ISDIR(st_root.st_mode)) || (!S_ISDIR(st_mount.st_mode)))
+            argsValidity = false;
+    }
+    else {
+        argsValidity = false;
+    }
+
+    if ((floor(fOld * numberOfBlocks) < 1) ||
+        (fOld >= 1) || (floor(fNew * numberOfBlocks) < 1) ||
+        (fNew >= 1) || (fOld + fNew > 1) || (numberOfBlocks <= 0)) {
+        argsValidity = false;
+    }
+
+    if (!argsValidity)
+    {
+        cout << "Usage: CachingFileSystem rootdir mountdir "
+                        "numberOfBlocks fOld fNew" << endl;
+        exit(EXIT_FAILURE);
+    }
 
     struct cfs_state cfs_st;
 
 //    int numberOfBlocks, int blockSize, int fOld, int fNew // todo remove
     // create a cache manager instance
-    CacheManager *cm = new CacheManager(10000, 0.2, 0.2);
+    CacheManager *cm = new CacheManager(10000, 0.2, 0.2); //todo input args
     cacheManager = cm;
 
     init_caching_oper();

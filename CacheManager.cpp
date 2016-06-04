@@ -205,3 +205,14 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
         }
     }
 }
+
+/**
+ * @brief prints the cache blocks from top to bottom
+ */
+void CacheManager::printCache() {
+    for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
+            .end(); it++) {
+        std::cout <<(*it)->getPath()<< " "<<(*it)->getBlockNumber()+1<<
+        " "<<(*it)->getRefCount()<<std::endl;
+    }
+}
