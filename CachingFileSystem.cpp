@@ -226,6 +226,9 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
+    // turn on read only todo
+    fi->direct_io = 1;
+
     // todo check if the path is longer than PATH_MAX, return error if it is
 
     if (((fi->flags & 3) == O_WRONLY) || ((fi->flags & 3) == O_RDWR))
@@ -269,146 +272,88 @@ int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     cout << "-- read --" << endl; // todo remove
 
-    int res = 0;
+    size_t res = 0;
 
-    size_t bytes_to_read = size;
-
+    // get the full path of the file
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
-    // if trying to read the log, return error
-    if (fpath == CF_LOG->logfile_full_path)
-    {
-        cout << "no such file" << endl; // todo remove
-        // no such file/directory error
-        return -ENOENT;
-    }
+    // if the file is the log, return no such file error todo
 
-    // if offset negative, return 0
-    if (offset < 0)
+    // if size is negative, return error
+    if (size < 0)
     {
-        cout << "offset < 0, leaving read" << endl; // todo remove
         return 0;
     }
 
-    // get the file size from the file descriptor
+    // get file descriptor
+    int fd = (int) fi->fh;
+
+    // get blocksize and size
     struct stat st;
-    stat(fpath, &st);
+    fstat(fd, &st);
     int file_size = (int) st.st_size;
-
-    // if offset > file size, return 0
-    if (offset > file_size)
-    {
-        cout << "offset > file_size, leaving read" << endl; // todo remove
-        return 0;
-    }
-
-    // find the block size
     int block_size = (int) st.st_blksize;
 
-    // find the number of blocks to read from the disk // todo round the results?
-    int first_block = (int) (offset / block_size);
-    cout << " ++ first_block " << first_block << endl; // todo remove
-
-    int num_of_blocks = (int) ceil(size / block_size);
-    cout << " ++ num_of_blocks " << num_of_blocks << endl; // todo remove
-
-    int read_size = block_size;
-
-    // allocate memory for each block
-    char *block_buf = (char *) aligned_alloc(block_size, block_size);
-
-    char *ret_buffer = (char *) aligned_alloc(block_size, size);
-
-    // else read it from the disk
-    // for each block, store it in the cache and add it to the buffer
-    for (int block = first_block ; block < (num_of_blocks + first_block) ; block++)
+    // if the offset is negative or greater than size, return 0
+    if (offset < 0 || file_size < offset)
     {
-//        if (block == 3) // todo remove
-//        {
-//            cout << "buf:" << endl << buf << endl;
-//        }
+        return 0;
+    }
 
-//        cout << "reading block: " << block << endl;
-        int block_offset = (block * block_size);
+    // calculate first block and number of blocks
+    int first_block = (int) (offset / block_size);
+    int number_of_blocks = (int) (size / block_size);
+    int last_block = first_block + number_of_blocks;
 
-        // if the block exists in the cache. load it from there todo
+    // declare pointer buffer to store block data
+    char *block_buf;
+
+    size_t bytes_to_read = size;
+
+    // read data from file blocks
+    for (int block = first_block; block < last_block; block++)
+    {
+        int block_offset = block * block_size;
+
+        ssize_t read_bytes = block_size;
+
         // create a block pair, and hash key
         BlockID blockID;
         blockID.first = (int) st.st_ino;
         blockID.second = block;
 
-        // find this key in the cache
-        const char* foundBuffer = cacheManager->retrieveBuffer(blockID);
+        // search for the block in the cache and read it
+        block_buf = (char *) cacheManager->retrieveBuffer(blockID);
 
-        // if the key exsist, retrive it
-        if (foundBuffer != nullptr)
+        // couldn't find the block in the cache
+        if (block_buf == nullptr)
         {
-            cout << "   @@ block found in cache!" << endl; // todo remove
+            // allocate space for data from the disk
+            block_buf = (char *) aligned_alloc(block_size, block_size);
 
-            if ((unsigned int) bytes_to_read < block_size)
-            {
-                cout << "file end: " << bytes_to_read << endl;
-                read_size = (int) bytes_to_read;
-            }
+            // read the block from the disk
+            read_bytes = pread(fd, block_buf, block_size, block_offset);
 
-            if (block == 0) // todo remove
-            {
-                cout << "      ^^ block_buf is:" << endl << foundBuffer << endl; // todo remove
-            }
-
-            cout << "block: " << block << endl;
-
-//            memcpy(buf, foundBuffer, read_size);
-            strcat(ret_buffer, block_buf);
-
-            res += block_size;
-            bytes_to_read -= read_size;
-
-            continue;
+            // store block in the cache
+            cacheManager->insertBlock((int) st.st_ino, block, block_buf, fpath);
         }
 
-
-
-//        cout << "      && reading block " << block << " from disk." << endl; // todo remove
-
-
-        // read to the current block to the buffer block, and log the call
-        log_call("pread");
-        read_size = (int) pread(fi->fh, block_buf, block_size, block_offset);
-
-        if (block == 0) // todo remove
+        // update the number of bytes to read if it's less than a block size
+        if (bytes_to_read < read_bytes)
         {
-        cout << "      ^^ block_buf is:" << endl << block_buf << endl; // todo remove
+            read_bytes = bytes_to_read;
         }
 
-//        cout << "read_size " << read_size << endl; // todo remove
-        // store in cache // todo
-        cacheManager->insertBlock((int) st.st_ino, block, block_buf, fpath);
+        // add data to the return buffer
+        memcpy((buf + (block_size * (block - first_block))), block_buf, read_bytes);
 
-        // add the data to buf
-//        memcpy(buf, block_buf, read_size);
-        strcat(ret_buffer, block_buf);
-
-        if (block == 1) // todo remove
-        {
-            cout << "      ** buf is:" << endl << ret_buffer << endl; // todo remove
-        }
-
-//        bytes_to_read -= read_size;
-
-        res += read_size;
+        // add number of bytes retrieved from the block
+        res += read_bytes;
+        bytes_to_read -= read_bytes;
     }
 
-    int retval = block_size * num_of_blocks;
-
-//    buf = ret_buffer;
-    memcpy(buf, ret_buffer, size);
-
-    cout << "retval: " << retval << endl;
-    cout << "res: " << res << endl;
-    // return the amount of bytes atually red
-    return size;
+    return (int) res;
 }
 
 /** Possibly flush cached data
@@ -473,6 +418,9 @@ int caching_release(const char *path, struct fuse_file_info *fi){
 
     (void) path;
     log_call("release");
+    struct stat st;
+    fstat(fi->fh, &st);
+
     res = close((int) fi->fh);
 
     return res;
