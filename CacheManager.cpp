@@ -23,7 +23,7 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
 
     // fills the list with nullBlocks, numberOfBlocks times
     for (int i = 1; i <= numberOfBlocks; i++){
-        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr, nullptr); // todo maybe-not new
+        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr, nullptr);
         cacheChain.push_front(nullBlock);
     }
 
@@ -32,22 +32,13 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain.end()
             ; it++){
         if (i == newSectionSize + 1){
-            std::cout<<i<<std::endl;
             middleSectionIter = it;
         }
         if (i == newSectionSize + middleSectionSize + 1){
-            std::cout<<i<<std::endl;
             oldSectionIter = it;
         }
         i++;
     }
-
-    std::cout<<"the size of the sections are:" << newSectionSize << ", " <<
-            middleSectionSize << ", "<<oldSectionSize<< std::endl;
-    std::cout<<"the first elements fileId of the sections are:" <<
-            middleSectionIter.operator*()->getFileId()
-    << ", " << oldSectionIter.operator*()->getFileId() << std::endl;
-
 }
 
 /**
@@ -215,7 +206,6 @@ std::string CacheManager::cacheToString() {
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
             .end(); it++) {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
-//            std::cout<<(*it)->getPath()<<std::endl;
             cacheStrStream<<((*it)->getPath())<<" "<<(std::to_string((*it)
               ->getBlockNumber() + 1))<<" "
             <<std::to_string((*it)->getRefCount())<<"\n";

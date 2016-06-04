@@ -31,56 +31,6 @@ static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile i
 static CacheManager *cacheManager;
 struct fuse_operations caching_oper;
 
-// -------------------------------------------------------------------------- //
-//                todo move this section to CacheManager.cpp                  //
-// -------------------------------------------------------------------------- //
-
-static std::map<ino_t, char*> *inotToPath;
-
-/**
- * @brief add an ino_t to the map of paths
- */
-void add_ino_t(ino_t ino, char *path)
-{
-    inotToPath->at(ino) = path;
-}
-
-/**
- * @brief remove a pair from the map
- */
-void remove_ino_t(ino_t ino)
-{
-    inotToPath->erase(ino);
-}
-
-/**
- * @brief rename a path in the map values
- */
-void rename_path(ino_t ino, char *path, char *npath)
-{
-    // convert parameters to cpp string
-    string s_path = path;
-    string s_npath = npath;
-
-    // find 'path' in the values
-    for (auto iterator = inotToPath->begin(); iterator != inotToPath->end(); iterator ++)
-    {
-        string p = iterator->second;
-
-        if (p.find(s_path))
-        {
-            size_t p_size = s_path.size();
-            p.replace(0, p_size, s_npath);
-        }
-
-        // replace 'path' with 'npath'
-        inotToPath->at(ino) = (char *) p.c_str();
-    }
-
-}
-
-// -------------------------------------------------------------------------- //
-
 /**
  * @brief Check if trying to refer to the logfile from the filesystem
  */
@@ -164,11 +114,18 @@ int caching_getattr(const char *path, struct stat *statbuf){
  * Introduced in version 2.5
  */
 int caching_fgetattr(const char *path, struct stat *statbuf,
-                    struct fuse_file_info *fi){ // todo handle logfile
+                    struct fuse_file_info *fi){
     cout << "-- fgetattr --" << endl;
 
-    char full_path[PATH_MAX];
-    caching_full_path(full_path, path);
+
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
+
+    int log = refering_logfile(fpath);
+    if (log)
+    {
+        return -ENOENT;
+    }
 
     log_call("fstat");
     int res = fstat((int) fi->fh, statbuf);
@@ -192,22 +149,21 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
  *
  * Introduced in version 2.5
  */
-int caching_access(const char *path, int mask) // todo handle logfile
+int caching_access(const char *path, int mask)
 {
     cout << "    -- access --" << endl; // todo remove
-    int res;
-    char full_path[PATH_MAX];
-    caching_full_path(full_path, path);
+    int res = 0;
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
 
-    res = refering_logfile(full_path);
-
-    if (res)
+    int log = refering_logfile(fpath);
+    if (log)
     {
-        return res;
+        return -ENOENT;
     }
 
     log_call("access");
-    res = access(full_path, mask);
+    res = access(fpath, mask);
     return res;
 }
 
@@ -225,7 +181,7 @@ int caching_access(const char *path, int mask) // todo handle logfile
 
  * Changed in version 2.2
  */
-int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle logfile
+int caching_open(const char *path, struct fuse_file_info *fi){
     cout << "    -- open -- " << endl;
 
     int retval = 0;
@@ -233,10 +189,14 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
-    // turn on read only todo
-    fi->direct_io = 1;
+    int log = refering_logfile(fpath);
+    if (log)
+    {
+        return -ENOENT;
+    }
 
-    // todo check if the path is longer than PATH_MAX, return error if it is
+    // turn off FUSE internal cache
+    fi->direct_io = 1;
 
     if (((fi->flags & 3) == O_WRONLY) || ((fi->flags & 3) == O_RDWR))
     {
@@ -306,8 +266,6 @@ int caching_read(const char *path, char *buf, size_t size,
     int file_size = (int) st.st_size;
     int block_size = (int) st.st_blksize;
 
-    cout << "offset: " << offset << endl; // todo remove
-
     // if the offset is negative or greater than size, return 0
     if ((offset < 0) || (file_size <= offset))
     {
@@ -325,12 +283,6 @@ int caching_read(const char *path, char *buf, size_t size,
     int first_block = (int) (offset / block_size);
     int number_of_blocks = (int) ceil(((double) size / (double) block_size));
     int last_block = first_block + number_of_blocks;
-
-    cout << "size / block_size " << (((double) size / (double) block_size)) << endl;
-    cout << "size: " << size << endl; // todo remove
-    cout << "file_size: " << file_size << endl; // todo remove
-    cout << "first_block: " << first_block << endl; // todo remove
-    cout << "last_block: " << last_block << endl; // todo remove
 
     // declare pointer buffer to store block data
     char *block_buf;
@@ -355,9 +307,6 @@ int caching_read(const char *path, char *buf, size_t size,
         // couldn't find the block in the cache
         if (block_buf == nullptr)
         {
-
-        cout << "wasn't found in cache" << endl; // todo remove
-
             // allocate space for data from the disk
             block_buf = (char *) aligned_alloc(block_size, block_size);
 
@@ -368,8 +317,6 @@ int caching_read(const char *path, char *buf, size_t size,
             cacheManager->insertBlock((int) st.st_ino, block, block_buf, fpath);
         }
 
-        cout << "bytes_to_read " << bytes_to_read << endl; // todo remove
-        cout << "read_bytes " << read_bytes << endl; // todo remove
         // update the number of bytes to read if it's less than a block size
         if (bytes_to_read < (size_t) read_bytes)
         {
@@ -626,7 +573,7 @@ If a failure occurs in this function, do nothing
 
  * Introduced in version 2.3
  */
-void caching_destroy(void *userdata){ // todo what this function does? (destroys the returned value of the init function)
+void caching_destroy(void *userdata){
     cout << "-- destroy --" << endl; // todo remove
 }
 
@@ -744,7 +691,7 @@ int main(int argc, char* argv[]){
     struct cfs_state cfs_st;
 
     // create a cache manager instance
-    cacheManager = new CacheManager(10000, 0.2, 0.2);
+    cacheManager = new CacheManager(numberOfBlocks, fOld, fNew);
 
     init_caching_oper();
 
@@ -764,8 +711,9 @@ int main(int argc, char* argv[]){
         argv[i] = NULL;
     }
         argv[2] = (char*) "-s";
-        argv[3] = (char*) "-f"; // todo remove before submission
-    argc = 4;
+    //    argv[3] = (char*) "-f"; // todo remove before submission
+    //argc = 4;
+    argc = 3;
 
     int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
 
