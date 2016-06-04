@@ -209,10 +209,18 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
 /**
  * @brief prints the cache blocks from top to bottom
  */
-void CacheManager::printCache() {
+std::string CacheManager::CacheToString() {
+    std::string cacheStr;
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
             .end(); it++) {
-        std::cout <<(*it)->getPath()<< " "<<(*it)->getBlockNumber()+1<<
-        " "<<(*it)->getRefCount()<<std::endl;
+        if ((*it)->getBlockNumber() != NULL_BLOCK) {
+            cacheStr.append((*it)->getPath());
+            cacheStr.append(" ");
+            cacheStr.append((const char *) ((*it)->getBlockNumber() + 1));
+            cacheStr.append(" ");
+            cacheStr.append((const char *) (*it)->getRefCount());
+            cacheStr.append("\n");
+        }
     }
+    return cacheStr;
 }
