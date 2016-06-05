@@ -172,14 +172,6 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
 }
 
 /**
- * @brief returns an iterator to the end of the cache. for checking if
- * the find method was successful
- */
-CacheChain::iterator CacheManager::getCacheEnd() {
-    return cacheChain.end();
-}
-
-/**
  * @brief update the path of files in the given path prefix
  */
 void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefix) {

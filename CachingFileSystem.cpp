@@ -330,6 +330,7 @@ int caching_read(const char *path, char *buf, size_t size,
             size_to_copy = remaining_data;
         }
 
+        cout << "pread_ret " << pread_ret << endl; // todo remove
         cout << "size_to_copy " << size_to_copy << endl; // todo remove
         cout << "remaining_data " << remaining_data << endl; // todo remove
         cout << "buf_prog " << buf_prog << endl; // todo remove
