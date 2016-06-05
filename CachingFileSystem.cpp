@@ -89,7 +89,6 @@ int caching_getattr(const char *path, struct stat *statbuf){
     // forward the call and log it
     log_call("lstat");
     res = lstat(fpath, statbuf);
-//    memset();
 
     // return errno in case of error
     if (res < 0)
@@ -114,8 +113,6 @@ int caching_getattr(const char *path, struct stat *statbuf){
  */
 int caching_fgetattr(const char *path, struct stat *statbuf,
                     struct fuse_file_info *fi){
-    cout << "-- fgetattr --" << endl;
-
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
@@ -124,6 +121,9 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
     {
         return -ENOENT;
     }
+
+    // reset statbuf
+    memset(statbuf, 0, sizeof(struct stat));
 
     log_call("fstat");
     int res = fstat((int) fi->fh, statbuf);
