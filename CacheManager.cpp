@@ -6,7 +6,6 @@
 #include <sstream>
 #include "CacheManager.h"
 
-#define BLOCK_NOT_FOUND 0
 #define NULL_BLOCK -1
 
 /**
@@ -39,7 +38,6 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
         }
         i++;
     }
-
 }
 
 /**
@@ -171,13 +169,6 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
     }
 }
 
-/**
- * @brief returns an iterator to the end of the cache. for checking if
- * the find method was successful
- */
-CacheChain::iterator CacheManager::getCacheEnd() {
-    return cacheChain.end();
-}
 
 /**
  * @brief update the path of files in the given path prefix

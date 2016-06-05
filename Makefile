@@ -4,8 +4,8 @@ CXXFLAGS=--std=c++11 -Wall
 FUSE=`pkg-config fuse --cflags --libs`
 
 # executable variables
-EXECSOURCES=CachingFileSystem.cpp
-EXECHEADERS=
+EXECSOURCES=CachingFileSystem.cpp CacheManager.cpp logManager.cpp CacheBlock.cpp 
+EXECHEADERS=CacheBlock.h CacheManager.h logManager.h
 EXECOBJECTS=$(EXECSOURCES:.cpp=.o)
 
 # target variables
