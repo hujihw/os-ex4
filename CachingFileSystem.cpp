@@ -70,7 +70,7 @@ void caching_full_path(char *absPath, const char *path) {
  * mount option is given.
  */
 int caching_getattr(const char *path, struct stat *statbuf){
-    cout << "   -- getattr --" << endl; // todo remove
+//    cout << "   -- getattr --" << endl; // todo remove
 
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
@@ -144,7 +144,7 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
  */
 int caching_access(const char *path, int mask) // todo handle logfile
 {
-    cout << "    -- access --" << endl; // todo remove
+//    cout << "    -- access --" << endl; // todo remove
     int res;
     char full_path[PATH_MAX];
     caching_full_path(full_path, path);
@@ -727,8 +727,9 @@ int main(int argc, char* argv[]){
         argv[i] = NULL;
     }
         argv[2] = (char*) "-s";
-        argv[3] = (char*) "-f"; // todo remove before submission
-    argc = 4;
+//        argv[3] = (char*) "-f"; // todo remove before submission
+//    argc = 4;
+    argc = 3;
 
     int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
 
