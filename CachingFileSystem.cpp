@@ -70,7 +70,6 @@ void caching_full_path(char *absPath, const char *path) {
  * mount option is given.
  */
 int caching_getattr(const char *path, struct stat *statbuf){
-//    cout << "   -- getattr --" << endl; // todo remove
 
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
@@ -114,11 +113,17 @@ int caching_getattr(const char *path, struct stat *statbuf){
  * Introduced in version 2.5
  */
 int caching_fgetattr(const char *path, struct stat *statbuf,
-                    struct fuse_file_info *fi){ // todo handle logfile
+                    struct fuse_file_info *fi){
     cout << "-- fgetattr --" << endl;
 
-    char full_path[PATH_MAX];
-    caching_full_path(full_path, path);
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
+
+    int log = refering_logfile(fpath);
+    if (log)
+    {
+        return -ENOENT;
+    }
 
     log_call("fstat");
     int res = fstat((int) fi->fh, statbuf);
@@ -142,14 +147,13 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
  *
  * Introduced in version 2.5
  */
-int caching_access(const char *path, int mask) // todo handle logfile
+int caching_access(const char *path, int mask)
 {
-//    cout << "    -- access --" << endl; // todo remove
     int res;
-    char full_path[PATH_MAX];
-    caching_full_path(full_path, path);
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
 
-    res = refering_logfile(full_path);
+    res = refering_logfile(fpath);
 
     if (res)
     {
@@ -157,7 +161,7 @@ int caching_access(const char *path, int mask) // todo handle logfile
     }
 
     log_call("access");
-    res = access(full_path, mask);
+    res = access(fpath, mask);
     return res;
 }
 
@@ -175,18 +179,21 @@ int caching_access(const char *path, int mask) // todo handle logfile
 
  * Changed in version 2.2
  */
-int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle logfile
-    cout << "    -- open -- " << endl;
+int caching_open(const char *path, struct fuse_file_info *fi){
 
     int retval = 0;
 
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
 
-    // turn on read only todo
-    fi->direct_io = 1;
+    int log = refering_logfile(fpath);
+    if (log)
+    {
+        return -ENOENT;
+    }
 
-    // todo check if the path is longer than PATH_MAX, return error if it is
+    // turn off FUSE internal cache
+    fi->direct_io = 1;
 
     if (((fi->flags & 3) == O_WRONLY) || ((fi->flags & 3) == O_RDWR))
     {
@@ -228,8 +235,8 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
 int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     cout << "-- read --" << endl; // todo remove
-//    size_t res = 0;
-    size_t res = size;
+    size_t res = 0;
+//    size_t res = size;
 
     // get the full path of the file
     char fpath[PATH_MAX];
@@ -270,7 +277,7 @@ int caching_read(const char *path, char *buf, size_t size,
     if ((size_t) file_size < (size + offset))
     {
         remaining_data = (size_t) file_size - offset;
-        res = remaining_data;
+//        res = remaining_data;
     }
 
     // calculate first block and number of blocks
@@ -341,7 +348,7 @@ int caching_read(const char *path, char *buf, size_t size,
         memcpy(buf + buf_prog, block_buf + block_offset, size_to_copy);
 
         // add number of bytes retrieved from the block
-//        res += size_to_copy;
+        res += size_to_copy;
         buf_prog += size_to_copy;
         offset_prog += size_to_copy;
         remaining_data -= size_to_copy;
@@ -429,7 +436,6 @@ int caching_release(const char *path, struct fuse_file_info *fi){
  * Introduced in version 2.3
  */
 int caching_opendir(const char *path, struct fuse_file_info *fi){
-    cout << "   -- opendir --" << endl; // todo remove
 
     // get full path from path
     char fullPath[PATH_MAX];
@@ -531,7 +537,6 @@ int caching_releasedir(const char *path, struct fuse_file_info *fi){
 
 /** Rename a file */
 int caching_rename(const char *path, const char *newpath){
-    cout << "-- rename --" << endl; // todo remove
 
     int res = 0;
     char fpath[PATH_MAX];
@@ -573,7 +578,6 @@ For your task, the function needs to return NULL always
  * Changed in version 2.6
  */
 void *caching_init(struct fuse_conn_info *conn){
-    cout << "-- init --" << endl; // todo remove
     fuse_get_context();
     return CF_LOG;
 }
@@ -589,8 +593,8 @@ If a failure occurs in this function, do nothing
 
  * Introduced in version 2.3
  */
-void caching_destroy(void *userdata){ // todo what this function does? (destroys the returned value of the init function)
-    cout << "-- destroy --" << endl; // todo remove
+void caching_destroy(void *userdata){
+
 }
 
 
@@ -610,7 +614,6 @@ void caching_destroy(void *userdata){ // todo what this function does? (destroys
  */
 int caching_ioctl (const char *, int cmd, void *arg,
         struct fuse_file_info *, unsigned int flags, void *data){
-    cout << "-- ioctl --" << endl; // todo remove
     log_call("ioctl");
     ioctl_log((char *) cacheManager->cacheToString().c_str());
 

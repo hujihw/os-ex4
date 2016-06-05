@@ -7,7 +7,7 @@ FILE *open_log(char *logfile) {
 
     logFile = fopen(logfile, "a");
     if (logFile == nullptr){
-        perror("Logfile not created"); // todo exit?
+//        perror("Logfile not created"); // todo need message?
         exit(EXIT_FAILURE);
     }
 
