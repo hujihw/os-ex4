@@ -277,6 +277,7 @@ int caching_read(const char *path, char *buf, size_t size,
     int offset_prog = offset;
 
     int block_offset;
+    int pread_ret = 0;
 
     // declare pointer buffer to store block data
     char *block_buf;
@@ -306,15 +307,22 @@ int caching_read(const char *path, char *buf, size_t size,
             block_buf = (char *) aligned_alloc(block_size, block_size);
 
             // read the block from the disk
-            size_to_copy = pread(fd, block_buf, block_size, block_begin);
+            pread_ret = (int) pread(fd, block_buf, block_size, block_begin);
 
             // store block in the cache
-            cacheManager->insertBlock((int) st.st_ino, block, block_buf, fpath);
+            cacheManager->insertBlock((int) st.st_ino, block, block_buf,
+                                      (char *) path);
         }
 
 
         block_offset = offset_prog % block_size;
-        size_to_copy = block_size - block_offset;
+
+        if (pread_ret == 0)
+        {
+            size_to_copy = block_size - block_offset;
+        } else {
+            size_to_copy = pread_ret;
+        }
 
         // update the number of bytes to read if it's less than a block size
         if (remaining_data < block_size)
@@ -544,7 +552,7 @@ int caching_rename(const char *path, const char *newpath){
     res = rename(fpath, fnewpath);
 
     // chack if file is cached, and rename the relevant blocks if it is
-    cacheManager->updatePaths(fpath, fnewpath);
+    cacheManager->updatePaths(path, newpath);
 
     return res;
 }

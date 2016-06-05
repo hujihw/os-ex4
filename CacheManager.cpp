@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include "CacheManager.h"
 
 #define BLOCK_NOT_FOUND 0
@@ -22,7 +23,7 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
 
     // fills the list with nullBlocks, numberOfBlocks times
     for (int i = 1; i <= numberOfBlocks; i++){
-        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr, nullptr); // todo maybe-not new
+        CacheBlock* nullBlock = new CacheBlock(-1, -1, nullptr, nullptr);
         cacheChain.push_front(nullBlock);
     }
 
@@ -31,21 +32,13 @@ CacheManager::CacheManager(int numberOfBlocks, double fOld, double fNew)
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain.end()
             ; it++){
         if (i == newSectionSize + 1){
-            std::cout<<i<<std::endl;
             middleSectionIter = it;
         }
         if (i == newSectionSize + middleSectionSize + 1){
-            std::cout<<i<<std::endl;
             oldSectionIter = it;
         }
         i++;
     }
-
-    std::cout<<"the size of the sections are:" << newSectionSize << ", " <<
-            middleSectionSize << ", "<<oldSectionSize<< std::endl;
-    std::cout<<"the first elements fileId of the sections are:" <<
-            middleSectionIter.operator*()->getFileId()
-    << ", " << oldSectionIter.operator*()->getFileId() << std::endl;
 
 }
 
@@ -201,7 +194,7 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
             std::string resPath = oldPath;
 
             resPath.replace(0, prefix.length(), prefix);
-            (*it)->setPath((char *) resPath.c_str());
+            (*it)->setPath((char *) resPath.data());
         }
     }
 }
@@ -209,18 +202,15 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
 /**
  * @brief prints the cache blocks from top to bottom
  */
-std::string CacheManager::CacheToString() {
-    std::string cacheStr;
+std::string CacheManager::cacheToString() {
+    std::stringstream cacheStrStream;
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
             .end(); it++) {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
-            cacheStr.append((*it)->getPath());
-            cacheStr.append(" ");
-            cacheStr.append((std::to_string((*it)->getBlockNumber() + 1)));
-            cacheStr.append(" ");
-            cacheStr.append(std::to_string((*it)->getRefCount()));
-            cacheStr.append("\n");
+            cacheStrStream<<((*it)->getPath())<<" "<<(std::to_string((*it)->getBlockNumber() + 1))<<" "
+            <<std::to_string((*it)->getRefCount())<<"\n";
         }
     }
-    return cacheStr;
+
+    return cacheStrStream.str();
 }
