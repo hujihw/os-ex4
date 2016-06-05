@@ -61,6 +61,11 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
     }
     auto blockIter = got->second;
 
+    if ((*blockIter)->getSection() != newSection){
+//         increment the blocks refcount
+        (*blockIter)->incrementRefCount();
+    }
+
     // move the block to the head and update its section attribute to newSection
     cacheChain.push_front(*blockIter); //put at head
     (*cacheChain.begin())->setSection(newSection); // set the section attribute to newSection
@@ -75,16 +80,12 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             break;
 
         case middleSection:
-            // increment the blocks refcount
-            (*blockIter)->incrementRefCount();
 
             middleSectionIter--;
             (*middleSectionIter)->setSection(middleSection);
             break;
 
         case oldSection:
-            // increment the blocks refcount
-            (*blockIter)->incrementRefCount();
 
             middleSectionIter--;
             (*middleSectionIter)->setSection(middleSection);
@@ -181,8 +182,8 @@ void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefi
  */
 std::string CacheManager::cacheToString() {
     std::stringstream cacheStrStream;
-    for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
-            .end(); it++) {
+    for (CacheChain::reverse_iterator it = cacheChain.rbegin(); it != cacheChain
+            .rend(); it++) {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
             std::string pathWithSlash = (*it)->getPath();
             std::string path = pathWithSlash.erase(0, 1);
