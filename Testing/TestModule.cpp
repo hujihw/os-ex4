@@ -1,5 +1,8 @@
 // TestModule.cpp
 
+#include <iostream>
+#include <string>
+#include <algorithm>
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -169,6 +172,12 @@ CacheManager CacheTester::initTest() {
 
 }
 
+//std::string not_matching(const char *buf1, const char *buf2)
+//{
+//    std::string sbuf1 = std::string(buf1);
+//    std::string sbuf2 = std::string(buf2);
+//    return std::mismatch(sbuf1.begin(), sbuf1.end(), sbuf2.begin());
+//}
 
 int main ()
 {
@@ -253,8 +262,8 @@ int main ()
 //    }
 //    std::cout<< m.cacheToString();
 
-    int fd1 = open("/tmp/ex4/Debug/mount_dir/html.lst", O_RDONLY);
-    int fd2 = open("/tmp/ex4/Debug/root_dir/html.lst", O_RDONLY);
+    int fd1 = open("/home/omri/Documents/ex4/Debug/mount_dir/a_file.txt", O_RDONLY);
+    int fd2 = open("/home/omri/Documents/ex4/Debug/root_dir/a_file.txt", O_RDONLY);
 
     struct stat st1, st2;
     fstat(fd1, &st1);
@@ -266,8 +275,8 @@ int main ()
     std::cout << "size 1: " << st1.st_size << std::endl;
     std::cout << "size 2: " << st2.st_size << std::endl;
 
-    int offset = 500;
-    size_t size = 90;
+    int offset = 10;
+    size_t size = 2674087;
 
     char buf1[size];
     char buf2[size];
@@ -281,10 +290,23 @@ int main ()
     std::cout << "buf1: " << buf1 << std::endl;
     std::cout << "buf2: " << buf2 << std::endl;
 
-    std::cout << "memcmp: " << memcmp(buf1, buf2, 81) << std::endl;
+    std::cout << "memcmp: " << memcmp(buf1, buf2, size) << std::endl;
+
+
+    printf("%d %c \n", buf1[0], buf1[0]);
+    printf("%d %c \n", buf2[0], buf2[0]);
+    printf("%d %c \n", buf1[1], buf1[1]);
+    printf("%d %c \n", buf2[1], buf2[1]);
+    printf("%d %c \n", buf1[2], buf1[2]);
+    printf("%d %c \n", buf2[2], buf2[2]);
+    printf("%d %c \n", buf1[3], buf1[3]);
+    printf("%d %c \n", buf2[3], buf2[3]);
+    printf("%d %c \n", buf1[4], buf1[4]);
+    printf("%d %c \n", buf2[4], buf2[4]);
+    printf("%d %c \n", buf1[5], buf1[5]);
+    printf("%d %c \n", buf2[5], buf2[5]);
+
+//    std::cout << "not matching: " << not_matching(buf1, buf2) << std::endl;
 
     return 0;
 }
-
-
-

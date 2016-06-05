@@ -192,11 +192,11 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
     }
 
     log_call("open");
-    int fd = open(fpath, OPEN_FLAGS);
+    int fd = open(fpath, O_RDONLY | O_DIRECT | O_SYNC);
 
     if (fd < 0)
     {
-        retval = -errno;
+        return -errno;
     }
 
     fi->fh = (uint64_t) fd;
@@ -274,9 +274,9 @@ int caching_read(const char *path, char *buf, size_t size,
     int number_of_blocks = (int) ceil(((double) remaining_data / (double) block_size));
     int last_block = first_block + number_of_blocks;
     int buf_prog = 0;
-    int offset_prog = offset;
+//    int offset_prog = (int) offset;
 
-    int block_offset;
+    int block_offset = 0;
     int pread_ret = 0;
 
     // declare pointer buffer to store block data
@@ -287,6 +287,7 @@ int caching_read(const char *path, char *buf, size_t size,
     {
         cout << "block: " << block << endl; // todo remove
         int block_begin = block * block_size;
+        block_offset = 0;
 
         ssize_t size_to_copy = block_size;
 
@@ -314,20 +315,43 @@ int caching_read(const char *path, char *buf, size_t size,
                                       (char *) path);
         }
 
-
-        block_offset = offset_prog % block_size;
-
-        if (pread_ret == 0)
+        // calculate the offset in the first block
+        if (block == first_block)
         {
-            size_to_copy = block_size - block_offset;
-        } else {
-            size_to_copy = pread_ret;
+            cout << "in first block -- res is: " << res << endl; // todo remove
+
+            // calculate block offset
+//            block_offset = offset_prog % block_size;
+            block_offset = offset % block_size;
+
+            // calculate size to copy
+            if (pread_ret == 0)
+            {
+                size_to_copy = block_size - block_offset;
+            } else {
+                size_to_copy = pread_ret;
+            }
         }
 
-        // update the number of bytes to read if it's less than a block size
-        if (remaining_data < block_size)
+        // calculate the amount of bytes to take in the last block
+        if (block == last_block - 1)
         {
+            cout << "in last block! res is: " << res << endl; // todo remove
+            cout << "remaining data is: " << remaining_data << endl; // todo remove
+            // calculate size to copy
             size_to_copy = remaining_data;
+
+//            // memcopy to buf
+//            memcpy(buf + buf_prog, block_buf, size_to_copy);
+        }
+
+
+        if ((block != first_block) || (block != last_block - 1))
+        {
+            cout << "middle block... res is: " << res << endl; // todo remove
+
+//            // add data to the return buffer
+//            memcpy(buf + buf_prog, block_buf, size_to_copy);
         }
 
         cout << "pread_ret " << pread_ret << endl; // todo remove
@@ -336,15 +360,14 @@ int caching_read(const char *path, char *buf, size_t size,
         cout << "buf_prog " << buf_prog << endl; // todo remove
         cout << "block_offset " << block_offset << endl; // todo remove
         cout << "file_size " << file_size << endl; // todo remove
-        cout << "offset_prog " << offset_prog << endl; // todo remove
+//        cout << "offset_prog " << offset_prog << endl; // todo remove
 
-        // add data to the return buffer
+        cout << "before memcpy, size_to_copy is: " << size_to_copy << endl; // todo remove
         memcpy(buf + buf_prog, block_buf + block_offset, size_to_copy);
 
-        // add number of bytes retrieved from the block
         res += size_to_copy;
         buf_prog += size_to_copy;
-        offset_prog += size_to_copy;
+//        offset_prog += size_to_copy;
         remaining_data -= size_to_copy;
     }
 
