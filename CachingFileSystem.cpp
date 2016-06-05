@@ -225,6 +225,8 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
  */
 int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
+
+
     cout << "-- read --" << endl; // todo remove
     size_t res = 0;
 
@@ -522,7 +524,7 @@ int caching_readdir(const char *path, void *buf,
         caching_full_path(fpath, path);
 
         // ignore the logfile when you find it
-        if (strcmp(dirEnt->d_name, logfile_name) == 0)
+        if (strcmp(dirEnt->d_name, logfile_name) == 0 && strcmp(path, "/") == 0)
         {
             continue;
         }
