@@ -3,52 +3,80 @@ omri kaplan (20043895), asaf etzion (20020272)
 EX: 4
 
 FILES:
-MapReduceFramework.cpp- The implementation of MapReduceFramework library
-Search.cpp- A program that searches for a substring in file names.
-Makefile- compiles MapReduceFramework.cpp into a library,
-		    creates an execution file for Search that uses our library,
+CachingFileSystem.cpp- single threaded caching file system using FUSE.
+CacheManager.cpp- manages the file system's buffer cache.
+logManager.cpp- manages the calls to the log file.
+CacheBlock.cpp- class for the block instances in the cache.
+CacheBlock.h- relevant header.
+CacheManager.h- relevant header.
+logManager.h- relevant header.
+Makefile- compiles CachingFileSystem.cpp and its dependencies,
+		    creates an execution file- CachingFileSystem,
 			creates a tar
 README- this file.
 
 REMARKS:
 
-our framework design:
-we chose the containers which are shared to be global. we hold in a vector a mutexes for each map thread created.
-we hold a vector- std::vector<std::pair<pthread_t, std::pair<list<pair<k2Base *, v2Base *>> *,pthread_mutex_t *>>>.
-through a locking a shared mutex each map thread adds itself to this vector. when a map thread reads data from the
-in list it locks an index that signs what is the next data to read from the in list.
-we used pthread_equal function for the emit func (for knowing what thread is running) as it is better that = operator.
-the shuffle thread is waiting for a sign that he has data in one of the containers by use of pthread_cond_timed_wait.
-when it is triggered it searches for a non empty list in the vector and when it finds one it competes for gaining
-control of the list by locking its relevant mutex in the vector. the shuffle thread adds the list data to the
-ShuffledMap which is- map<k2Base*, V2_LIST>. using join we ensure all of the map treads are deleted and then we
-perform a last sweep over the lists and shuffle any data left. afterwards we merge the lists and sort them for the
-desired output.
+the design of the file system's buffer cache is as follows:
+we chose two data structures, a list (which is a doubly linked list) of
+pointers to cacheBlocks (our class for blocks) with two iterators that point 
+to the first blocks of the middle and old sections. the second data structure is 
+a map that maps a pair of ints- the file ID and the block number, to a iterator 
+that point at the relevant block in the list above. we had to implement support 
+for hashing a pair of ints (c++11 don't support that).
+thus with this design we get we can search for blocks in the cache and retrieve 
+their buffer, or add it in a constant time. for renaming files and directories 
+we go over the cache list in O(number of blocks) and rename every block that 
+has the same prefix in his path attribute.
 
 ANSWERS:
 
-1. we propose the following design-
-the runMapReduceFramework would create a pipe for each map thread it creates. we hold a list in the global scope that
-stores the read file descriptors which the shuffle thread wil use and every map thread will get a write fd as a
-parameter. every map thread can write the mapped data to the pipe using its relevant write fd. finally it will finish
-the writing process when he will get a signal to stop. map threads will send through the pipe 2 pointers for key
-and value that should be shuffled.
+Q1. In this exercise you cached files blocks in the heap in order to enable
+fast access to this data.
+Does this always provides faster response then accessing the disk?
+Hint: where is the cache saved?
 
-2.
+A1. Only if all of the required blocks of the file are currently stored in the 
+cache. otherwise the access time will be slower because of the
+disk access overhead.
 
-3. We will go through every method and compare these attributes:
-    a) Utilizing multi-cores
-    b) Create a sophisticated scheduler
-    c) Communication time (between different threads/processes)
-    d) Ability to progress while one thread/process is blocked
-    eOverall speed
 
-(*) Single thread and a single process:
+Q2. In the class you saw different algorithms for choosing which memory page 
+will be moved to the disk. The most common approach is the clock-algorithm,
+which is LRU-like. Also our blocks-caching algorithms tries to minimize
+the accesses to disks by saving data in the memory. However, when we manage the
+buffer cache, we may actually use more sophisticated algorithms (such as FBR),
+which will be much harder to manage for swapping pages. Why?
+Hint – who handles accesses to memory? And who handles accesses to files?
 
-    a) There is no multi-core utilization because only
-    one thread is available to the program.
+A2. File block access is handled by the OS, while memory access is handled by
+the Memory management unit (MMU) which is hardware.
+because of that, we can't actually hold the LRU of each of the blocks.
+That happens because the hardware cannot support tracking the time of usage of
+the cached blocks, except for a single used bit, that's why we have to use the
+clock-algorithm.
 
-    b) Also not relevant, because there is no
-    meaning for scheduling one thread.
 
-    c)  Not relevant.
+Q3. Give a simple working pattern with files when LRU is better than LFU and
+another working pattern when LFU is better.
+Finally, give a working pattern when both of them don't help at all.
+
+A3. LFU wins LRU- when we have some blocks that we use very frequently,
+and we want to keep them in the cache even if once in a while other blocks 
+are used.
+LRU wins LFU- when there are blocks that were used very frequently for a short
+period of time, and then not accessed again.
+In LFU new and relevant blocks will be removed from the cache 
+when more blocks arrive because their counter is lower than the old files.
+In LRU they will immediately be prioritized over the old blocks.
+LFU and LRU aren't optimal if we have a cache of S maximum size of items,
+and we access repeatedly R number of items and R is bigger than S.
+
+
+Q4. In FBR, accesses to blocks in the “new section” doesn’t increase the
+block’s counter. Why? Which possible issues it tries to solve?
+
+A4. This feature disassociates the drawback of LFU for not giving priority 
+for file that were recently used. making the cache hold a section that keeps
+recently used files. thus we get a hybrid replacement policy,
+attempting to capture the benefits of both LRU and LFU without their drawbacks. 
