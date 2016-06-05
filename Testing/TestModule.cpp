@@ -263,8 +263,8 @@ int main ()
     std::cout << "size 1: " << st1.st_size << std::endl;
     std::cout << "size 2: " << st2.st_size << std::endl;
 
-    int offset = 1158500;
-    size_t size = 82;
+    int offset = 1152500;
+    size_t size = 8090;
 
     char buf1[size];
     char buf2[size];
@@ -278,7 +278,7 @@ int main ()
     std::cout << "buf1: " << buf1 << std::endl;
     std::cout << "buf2: " << buf2 << std::endl;
 
-    std::cout << "memcmp: " << memcmp(buf1, buf2, size) << std::endl;
+    std::cout << "memcmp: " << memcmp(buf1, buf2, 81) << std::endl;
 
     return 0;
 }

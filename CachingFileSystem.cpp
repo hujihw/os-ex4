@@ -228,7 +228,8 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
 int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     cout << "-- read --" << endl; // todo remove
-    size_t res = 0;
+//    size_t res = 0;
+    size_t res = size;
 
     // get the full path of the file
     char fpath[PATH_MAX];
@@ -265,9 +266,11 @@ int caching_read(const char *path, char *buf, size_t size,
     // if the file is smaller than the size to read,
     // take size to read as the file size
     int remaining_data = size;
+
     if ((size_t) file_size < (size + offset))
     {
         remaining_data = (size_t) file_size - offset;
+        res = remaining_data;
     }
 
     // calculate first block and number of blocks
@@ -326,22 +329,25 @@ int caching_read(const char *path, char *buf, size_t size,
             size_to_copy = remaining_data;
         }
 
+
         cout << "size_to_copy " << size_to_copy << endl; // todo remove
         cout << "remaining_data " << remaining_data << endl; // todo remove
         cout << "buf_prog " << buf_prog << endl; // todo remove
         cout << "block_offset " << block_offset << endl; // todo remove
-        cout << "size_to_copy " << size_to_copy << endl; // todo remove
+        cout << "file_size " << file_size << endl; // todo remove
+        cout << "offset_prog " << offset_prog << endl; // todo remove
 
         // add data to the return buffer
         memcpy(buf + buf_prog, block_buf + block_offset, size_to_copy);
 
         // add number of bytes retrieved from the block
-        res += size_to_copy;
+//        res += size_to_copy;
         buf_prog += size_to_copy;
         offset_prog += size_to_copy;
         remaining_data -= size_to_copy;
     }
 
+    cout << "res: " << res << endl; // todo remove
     return (int) res;
 }
 
