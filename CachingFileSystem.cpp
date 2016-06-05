@@ -708,7 +708,7 @@ int main(int argc, char* argv[]){
     struct cfs_state cfs_st;
 
     // create a cache manager instance
-    cacheManager = new CacheManager(10000, 0.2, 0.2);
+    cacheManager = new CacheManager(numberOfBlocks, fOld, fNew);
 
     init_caching_oper();
 

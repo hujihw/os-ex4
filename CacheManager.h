@@ -59,12 +59,6 @@ public:
     const char * retrieveBuffer(BlockID blockID);
 
     /**
-     * @brief Retrieve a block's file id from the cache
-     * returns zero if the block was not found
-     */
-    char * retrieveFilePath(BlockID blockID);
-
-    /**
      * @brief constructs a new block and adds it to the cache.
      */
     void insertBlock(int fileDesc, int blockNumber, const char *buff, char *path);

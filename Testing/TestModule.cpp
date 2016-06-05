@@ -253,21 +253,21 @@ int main ()
 //    }
 //    std::cout<< m.cacheToString();
 
-    int fd1 = open("/home/omri/Documents/ex4/Debug/mount_dir/html.lst", O_RDONLY);
-    int fd2 = open("/home/omri/Documents/ex4/Debug/root_dir/html.lst", O_RDONLY);
+    int fd1 = open("/tmp/ex4/Debug/mount_dir/html.lst", O_RDONLY);
+    int fd2 = open("/tmp/ex4/Debug/root_dir/html.lst", O_RDONLY);
 
     struct stat st1, st2;
     fstat(fd1, &st1);
     fstat(fd2, &st2);
 
+    std::cout << "fd1: " << fd1 << std::endl;
+    std::cout << "fd2: " << fd2 << std::endl;
+
     std::cout << "size 1: " << st1.st_size << std::endl;
     std::cout << "size 2: " << st2.st_size << std::endl;
 
-    int offset = 1158500;
-    size_t size = 5082;
-
-//    int offset = 0;
-//    size_t size = 1158581;
+    int offset = 500;
+    size_t size = 90;
 
     char buf1[size];
     char buf2[size];
@@ -281,7 +281,10 @@ int main ()
     std::cout << "buf1: " << buf1 << std::endl;
     std::cout << "buf2: " << buf2 << std::endl;
 
-    std::cout << "memcmp: " << memcmp(buf1, buf2, size) << std::endl;
+    std::cout << "memcmp: " << memcmp(buf1, buf2, 81) << std::endl;
 
     return 0;
 }
+
+
+

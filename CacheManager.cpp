@@ -6,7 +6,6 @@
 #include <sstream>
 #include "CacheManager.h"
 
-#define BLOCK_NOT_FOUND 0
 #define NULL_BLOCK -1
 
 /**
@@ -114,20 +113,6 @@ const char * CacheManager::retrieveBuffer(BlockID blockID) {
 
 
 /**
- * @brief Retrieve a block's file id from the cache
- * returns zero if the block was not found
- */
-char * CacheManager::retrieveFilePath(BlockID blockID) {
-    auto blockIter = findBlock(blockID);
-
-    if (blockIter == cacheChain.end()){
-        return nullptr;
-    }
-
-    return (*blockIter)->getPath();
-}
-
-/**
  * @brief Insert a new block to the cache.
  */
 void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
@@ -199,10 +184,11 @@ std::string CacheManager::cacheToString() {
     for (CacheChain::iterator it = cacheChain.begin(); it != cacheChain
             .end(); it++) {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
-            cacheStrStream<<((*it)->getPath())<<" "<<(std::to_string((*it)->getBlockNumber() + 1))<<" "
+            std::string pathWithSlash = (*it)->getPath();
+            std::string path = pathWithSlash.erase(0, 1);
+            cacheStrStream<<(path)<<" "<<(std::to_string((*it)->getBlockNumber() + 1))<<" "
             <<std::to_string((*it)->getRefCount())<<"\n";
         }
     }
-
     return cacheStrStream.str();
 }
