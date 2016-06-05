@@ -181,77 +181,104 @@ int main ()
 //    fuseTester.openTest();
 //    fuseTester.renamrTest();
 
-    CacheTester cacheTester;
-    CacheManager m = cacheTester.initTest();
+//    CacheTester cacheTester;
+//    CacheManager m = cacheTester.initTest();
+//
+//    m.insertBlock(1, 1, (char *) "test1", (char *) "path");
+//    char * filePath = m.retrieveFilePath(std::pair<int, int>(1, 1));
+//    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
+//    const char* buff = m.retrieveBuffer(std::pair<int, int>(1, 1));
+//    if (buff == NULL){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected buff: test1, got: " << buff << std::endl;
+//    }
+//
+//    m.insertBlock(2, 1, (char *) "test2", (char *) "path");
+//    filePath = m.retrieveFilePath(std::pair<int, int>(2, 1));
+//    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
+//    buff = m.retrieveBuffer(std::pair<int, int>(2, 1));
+//    if (buff == NULL){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected buff: test2, got: " << buff << std::endl;
+//    }
+//
+//    m.insertBlock(3, 1, (char *) "test3", (char *) "path");
+//    filePath = m.retrieveFilePath(std::pair<int, int>(3, 1));
+//    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
+//    buff = m.retrieveBuffer(std::pair<int, int>(3, 1));
+//    if (buff == NULL){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected buff: test3, got: " << buff << std::endl;
+//    }
+//
+//    m.insertBlock(4, 1, (char *) "test4", (char *) "path");
+//    filePath = m.retrieveFilePath(std::pair<int, int>(4, 1));
+//    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
+//    buff = m.retrieveBuffer(std::pair<int, int>(4, 1));
+//    if (buff == NULL){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected buff: test4, got: " << buff << std::endl;
+//    }
+//
+//    for (int i = 5; i < 2000; i++){
+////        const char * buff2 = ("test" + std::to_string(i)).c_str();
+//        const char * buff1 = "test";
+//        m.insertBlock(i, 1, buff1, (char *) "anotherPath");
+//    }
+//    filePath = m.retrieveFilePath(std::pair<int, int>(1980, 1));
+//    if (filePath == nullptr){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected filePath: anotherPath, got: " << filePath <<
+//        std::endl;
+//    }
+//    buff = m.retrieveBuffer(std::pair<int, int>(1980, 1));
+//    if (buff == NULL){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected buff: test, got: " << buff << std::endl;
+//    }
+//
+//    m.updatePaths("anot", "newp");
+//    char * filePath1 = m.retrieveFilePath(std::pair<int, int>(1999, 1));
+//    if (filePath1 == nullptr){
+//        std::cout<<"got null"<<std::endl;
+//    } else {
+//        std::cout << "expected filePath: newpherPath, got: " << filePath1 <<
+//        std::endl;
+//    }
+//    std::cout<< m.cacheToString();
 
-    m.insertBlock(1, 1, (char *) "test1", (char *) "path");
-    char * filePath = m.retrieveFilePath(std::pair<int, int>(1, 1));
-    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
-    const char* buff = m.retrieveBuffer(std::pair<int, int>(1, 1));
-    if (buff == NULL){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected buff: test1, got: " << buff << std::endl;
-    }
+    int fd1 = open("/home/omri/Documents/ex4/Debug/mount_dir/html.lst", O_RDONLY);
+    int fd2 = open("/home/omri/Documents/ex4/Debug/root_dir/html.lst", O_RDONLY);
 
-    m.insertBlock(2, 1, (char *) "test2", (char *) "path");
-    filePath = m.retrieveFilePath(std::pair<int, int>(2, 1));
-    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
-    buff = m.retrieveBuffer(std::pair<int, int>(2, 1));
-    if (buff == NULL){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected buff: test2, got: " << buff << std::endl;
-    }
+    struct stat st1, st2;
+    fstat(fd1, &st1);
+    fstat(fd2, &st2);
 
-    m.insertBlock(3, 1, (char *) "test3", (char *) "path");
-    filePath = m.retrieveFilePath(std::pair<int, int>(3, 1));
-    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
-    buff = m.retrieveBuffer(std::pair<int, int>(3, 1));
-    if (buff == NULL){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected buff: test3, got: " << buff << std::endl;
-    }
+    std::cout << "size 1: " << st1.st_size << std::endl;
+    std::cout << "size 2: " << st2.st_size << std::endl;
 
-    m.insertBlock(4, 1, (char *) "test4", (char *) "path");
-    filePath = m.retrieveFilePath(std::pair<int, int>(4, 1));
-    std::cout<<"expected filePath: path, got: "<<filePath<<std::endl;
-    buff = m.retrieveBuffer(std::pair<int, int>(4, 1));
-    if (buff == NULL){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected buff: test4, got: " << buff << std::endl;
-    }
+    int offset = 1158500;
+    size_t size = 82;
 
-    for (int i = 5; i < 2000; i++){
-//        const char * buff2 = ("test" + std::to_string(i)).c_str();
-        const char * buff1 = "test";
-        m.insertBlock(i, 1, buff1, (char *) "anotherPath");
-    }
-    filePath = m.retrieveFilePath(std::pair<int, int>(1980, 1));
-    if (filePath == nullptr){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected filePath: anotherPath, got: " << filePath <<
-        std::endl;
-    }
-    buff = m.retrieveBuffer(std::pair<int, int>(1980, 1));
-    if (buff == NULL){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected buff: test, got: " << buff << std::endl;
-    }
+    char buf1[size];
+    char buf2[size];
 
-    m.updatePaths("anot", "newp");
-    char * filePath1 = m.retrieveFilePath(std::pair<int, int>(1999, 1));
-    if (filePath1 == nullptr){
-        std::cout<<"got null"<<std::endl;
-    } else {
-        std::cout << "expected filePath: newpherPath, got: " << filePath1 <<
-        std::endl;
-    }
-    std::cout<< m.cacheToString();
+    lseek(fd1, offset, 0);
+    lseek(fd2, offset, 0);
+
+    read(fd1, buf1, size);
+    read(fd2, buf2, size);
+
+    std::cout << "buf1: " << buf1 << std::endl;
+    std::cout << "buf2: " << buf2 << std::endl;
+
+    std::cout << "memcmp: " << memcmp(buf1, buf2, size) << std::endl;
 
     return 0;
 }

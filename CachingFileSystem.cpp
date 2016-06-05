@@ -31,56 +31,6 @@ static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile i
 static CacheManager *cacheManager;
 struct fuse_operations caching_oper;
 
-// -------------------------------------------------------------------------- //
-//                todo move this section to CacheManager.cpp                  //
-// -------------------------------------------------------------------------- //
-
-static std::map<ino_t, char*> *inotToPath;
-
-/**
- * @brief add an ino_t to the map of paths
- */
-void add_ino_t(ino_t ino, char *path)
-{
-    inotToPath->at(ino) = path;
-}
-
-/**
- * @brief remove a pair from the map
- */
-void remove_ino_t(ino_t ino)
-{
-    inotToPath->erase(ino);
-}
-
-/**
- * @brief rename a path in the map values
- */
-void rename_path(ino_t ino, char *path, char *npath)
-{
-    // convert parameters to cpp string
-    string s_path = path;
-    string s_npath = npath;
-
-    // find 'path' in the values
-    for (auto iterator = inotToPath->begin(); iterator != inotToPath->end(); iterator ++)
-    {
-        string p = iterator->second;
-
-        if (p.find(s_path))
-        {
-            size_t p_size = s_path.size();
-            p.replace(0, p_size, s_npath);
-        }
-
-        // replace 'path' with 'npath'
-        inotToPath->at(ino) = (char *) p.c_str();
-    }
-
-}
-
-// -------------------------------------------------------------------------- //
-
 /**
  * @brief Check if trying to refer to the logfile from the filesystem
  */
@@ -306,8 +256,6 @@ int caching_read(const char *path, char *buf, size_t size,
     int file_size = (int) st.st_size;
     int block_size = (int) st.st_blksize;
 
-    cout << "offset: " << offset << endl; // todo remove
-
     // if the offset is negative or greater than size, return 0
     if ((offset < 0) || (file_size <= offset))
     {
@@ -316,33 +264,32 @@ int caching_read(const char *path, char *buf, size_t size,
 
     // if the file is smaller than the size to read,
     // take size to read as the file size
-    if ((size_t) (file_size + offset) < size)
+    int remaining_data = size;
+    if ((size_t) file_size < (size + offset))
     {
-        size = (size_t) file_size;
+        remaining_data = (size_t) file_size - offset;
     }
 
     // calculate first block and number of blocks
     int first_block = (int) (offset / block_size);
-    int number_of_blocks = (int) ceil(((double) size / (double) block_size));
+    int number_of_blocks = (int) ceil(((double) remaining_data / (double) block_size));
     int last_block = first_block + number_of_blocks;
+    int buf_prog = 0;
+    int offset_prog = offset;
 
-    cout << "size / block_size " << (((double) size / (double) block_size)) << endl;
-    cout << "size: " << size << endl; // todo remove
-    cout << "file_size: " << file_size << endl; // todo remove
-    cout << "first_block: " << first_block << endl; // todo remove
-    cout << "last_block: " << last_block << endl; // todo remove
+    int block_offset;
+    int block_last_byte;
 
     // declare pointer buffer to store block data
     char *block_buf;
 
-    size_t bytes_to_read = size;
-
     // read data from file blocks
     for (int block = first_block; block < last_block; block++)
     {
-        int block_offset = block * block_size;
+        cout << "block: " << block << endl; // todo remove
+        int block_begin = block * block_size;
 
-        ssize_t read_bytes = block_size;
+        ssize_t size_to_copy = block_size;
 
         // create a block pair, and hash key
         BlockID blockID;
@@ -355,34 +302,44 @@ int caching_read(const char *path, char *buf, size_t size,
         // couldn't find the block in the cache
         if (block_buf == nullptr)
         {
-
-        cout << "wasn't found in cache" << endl; // todo remove
+            cout << "readig from the disk" << endl; // todo remove
 
             // allocate space for data from the disk
             block_buf = (char *) aligned_alloc(block_size, block_size);
 
             // read the block from the disk
-            read_bytes = pread(fd, block_buf, block_size, block_offset);
+            size_to_copy = pread(fd, block_buf, block_size, block_begin);
 
             // store block in the cache
             cacheManager->insertBlock((int) st.st_ino, block, block_buf, fpath);
         }
 
-        cout << "bytes_to_read " << bytes_to_read << endl; // todo remove
-        cout << "read_bytes " << read_bytes << endl; // todo remove
+
+        block_offset = offset_prog % block_size;
+        block_last_byte = block_size;
+
+        size_to_copy = block_last_byte - block_offset;
+
         // update the number of bytes to read if it's less than a block size
-        if (bytes_to_read < (size_t) read_bytes)
+        if (remaining_data < block_size)
         {
-            cout << "bytes_to_read < read_bytes" << endl;
-            read_bytes = bytes_to_read;
+            size_to_copy = remaining_data;
         }
 
+        cout << "size_to_copy " << size_to_copy << endl; // todo remove
+        cout << "remaining_data " << remaining_data << endl; // todo remove
+        cout << "buf_prog " << buf_prog << endl; // todo remove
+        cout << "block_offset " << block_offset << endl; // todo remove
+        cout << "size_to_copy " << size_to_copy << endl; // todo remove
+
         // add data to the return buffer
-        memcpy((buf + (block_size * (block - first_block))), block_buf, read_bytes);
+        memcpy(buf + buf_prog, block_buf + block_offset, size_to_copy);
 
         // add number of bytes retrieved from the block
-        res += read_bytes;
-        bytes_to_read -= read_bytes;
+        res += size_to_copy;
+        buf_prog += size_to_copy;
+        offset_prog += size_to_copy;
+        remaining_data -= size_to_copy;
     }
 
     return (int) res;
