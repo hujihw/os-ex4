@@ -87,6 +87,7 @@ private:
     CacheChain cacheChain;
     CacheChain::iterator middleSectionIter; // the first block in the middle section
     CacheChain::iterator oldSectionIter; // the first block in te old section
+
 };
 
 #endif //EX4_CACHEMANAGER_H

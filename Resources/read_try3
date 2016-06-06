@@ -1,0 +1,188 @@
+//
+////    cout << "-- read --" << endl; // todo remove
+//
+//    // get file descriptor
+//    int fd = (int) fi->fh;
+////     get blocksize and size
+//    struct stat st;
+//    fstat(fd, &st);
+//    int file_size = (int) st.st_size;
+//    size_t block_size = st.st_blksize;
+//
+//    // get the full path of the file
+//    char fpath[PATH_MAX];
+//    caching_full_path(fpath, path);
+//
+//    // if the file is the log, return no such file error
+//    int log = refering_logfile(fpath);
+//    if (log)
+//    {
+//        return -ENOENT;
+//    }
+//
+//    struct stat file_info;
+//    caching_getattr(path, &file_info);
+//
+//    char *tempBuffer;
+//    size_t lastBlock, firstBlock;
+//
+//    firstBlock = ceiling_division(((size_t) offset + 1) , block_size);
+//    firstBlock < 1 ? firstBlock=1 : 0;
+//    size_t last_part, firstPart;
+//    firstPart = block_size - (offset % block_size);
+//    if((size_t) (file_info.st_size - offset) < size) // data to write
+//        // is smaller than buffer
+//    {
+//
+//        lastBlock = ceiling_division((size_t)(file_info.st_size),
+//                                     block_size);
+//        last_part = file_info.st_size % block_size;
+//    }
+//    else if (size < (size_t)file_info.st_size - offset) // buffer is smaller
+//        // than data
+//    {
+//
+//        lastBlock = ceiling_division(offset + size,
+//                                     block_size);
+//        last_part = (offset + size) % block_size;
+//
+//    }
+//    else
+//    {
+//        lastBlock = ceiling_division(offset + size, block_size);
+//        last_part = (file_info.st_size) % block_size;
+//    }
+//    last_part == 0 ? last_part = block_size : 0;
+//
+//
+//    size_t bytes_written = 0;
+//
+//    //if we finished reading the file
+//    if (offset >= file_info.st_size)
+//    {
+//        return 0;
+//    }
+//
+//    if (firstBlock == lastBlock)
+//    {
+////        pCacheFBR->cacheReadBlock(file_info.st_ino, fi, firstBlock, fpath,
+////                                  &tempBuffer);
+//
+////         create a block pair, and hash key
+//        BlockID blockID;
+//        blockID.first = (int) st.st_ino;
+//        blockID.second = (int) firstBlock;
+//        const char * ret = cacheManager->retrieveBuffer(blockID);
+//        if (ret == nullptr){
+//
+//            char* tempBuffer = (char*) aligned_alloc((size_t) block_size,
+//                                                     block_size);
+//
+//
+//            int retstat = (int) pread((int) fi->fh, tempBuffer, block_size,
+//                                      (firstBlock-1)*block_size);
+//
+//            if(retstat < 0){
+//                return -errno;
+//            }
+//
+//            cacheManager->insertBlock(st.st_ino, firstBlock, tempBuffer,
+//                                      (char *) path);
+//        }
+//        bytes_written = min((size_t) file_info.st_size - offset, size);
+//        memcpy(buf, tempBuffer + (offset % block_size),
+//               bytes_written);
+//    }
+//    else {
+//
+//        //reading the first block
+////        pCacheFBR->cacheReadBlock(file_info.st_ino, fi, firstBlock, fpath,
+////                                  &tempBuffer);
+//        //         create a block pair, and hash key
+//        BlockID blockID;
+//        blockID.first = (int) st.st_ino;
+//        blockID.second = (int) firstBlock;
+//        const char * ret = cacheManager->retrieveBuffer(blockID);
+//        if (ret == nullptr) {
+//
+//            char* tempBuffer = (char*) aligned_alloc((size_t) block_size,
+//                                               block_size);
+//
+//
+//            int retstat = (int) pread((int) fi->fh, tempBuffer, block_size,
+//                                  (firstBlock-1)*block_size);
+//
+//            if(retstat < 0){
+//                return -errno;
+//            }
+//
+//            cacheManager->insertBlock(st.st_ino, firstBlock, tempBuffer,
+//                                      (char *) path);
+//        }
+//        bytes_written = firstPart;
+//        memcpy(buf, tempBuffer + (offset % block_size),
+//               bytes_written);
+//
+//        //reading all the blocks except the last
+//        for (size_t i = firstBlock + 1; i < lastBlock; i++) {
+//
+////            pCacheFBR->cacheReadBlock(file_info.st_ino, fi, i, fpath,
+////                                      &tempBuffer);
+//
+//            //         create a block pair, and hash key
+//            blockID.first = (int) st.st_ino;
+//            blockID.second = (int) i;
+//            const char * ret = cacheManager->retrieveBuffer(blockID);
+//            if (ret == nullptr) {
+//                char* tempBuffer = (char*) aligned_alloc((size_t) block_size,
+//                                                   block_size);
+//
+//
+//                int retstat = (int) pread((int) fi->fh, tempBuffer, block_size,
+//                                          (i-1)*block_size);
+//
+//                if(retstat < 0){
+//                    return -errno;
+//                }
+//
+//                cacheManager->insertBlock(st.st_ino, i, tempBuffer,
+//                                          (char *) path);
+//            }
+//
+//            memcpy(buf + bytes_written, tempBuffer, block_size);
+//            bytes_written += block_size;
+//        }
+//
+//        //reading the last block
+////        pCacheFBR->cacheReadBlock(file_info.st_ino, fi, lastBlock, fpath,
+////                                  &tempBuffer);
+//
+//        blockID.first = (int) st.st_ino;
+//        blockID.second = (int) lastBlock;
+//        const char * ret1 = cacheManager->retrieveBuffer(blockID);
+//        if (ret1 == nullptr) {
+//            char* tempBuffer = (char*) aligned_alloc((size_t) block_size,
+//                                                     block_size);
+//
+//
+//            int retstat = (int) pread((int) fi->fh, tempBuffer, block_size,
+//                                      (lastBlock-1)*block_size);
+//
+//            if(retstat < 0){
+//                return -errno;
+//            }
+//
+//            cacheManager->insertBlock(st.st_ino, lastBlock, tempBuffer,
+//                                      (char *) path);
+//        }
+//
+//        memcpy(buf + bytes_written, tempBuffer, last_part);
+//        bytes_written += last_part;
+//    }
+//
+//    return (int) bytes_written;
+//
+
+
+
+

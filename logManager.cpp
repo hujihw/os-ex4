@@ -7,7 +7,7 @@ FILE *open_log(char *logfile) {
 
     logFile = fopen(logfile, "a");
     if (logFile == nullptr){
-        perror("Logfile not created");
+        perror("System Error: logfile was not created");
         exit(EXIT_FAILURE);
     }
 

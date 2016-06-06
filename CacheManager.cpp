@@ -66,13 +66,6 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
         (*blockIter)->incrementRefCount();
     }
 
-    // move the block to the head and update its section attribute to newSection
-    cacheChain.push_front(*blockIter); //put at head
-    (*cacheChain.begin())->setSection(newSection); // set the section attribute to newSection
-    // reset the iterator in the map to point at the block
-    blocksMap[blockID] = cacheChain.begin();
-
-
     // correct the relevant bounds and update the new bounds section attribute
     switch ((*blockIter)->getSection()){
 
@@ -93,6 +86,12 @@ CacheChain::iterator CacheManager::findBlock(BlockID blockID) {
             (*oldSectionIter)->setSection(oldSection);
             break;
     }
+
+    // move the block to the head and update its section attribute to newSection
+    cacheChain.push_front(*blockIter); //put at head
+    (*cacheChain.begin())->setSection(newSection); // set the section attribute to newSection
+    // reset the iterator in the map to point at the block
+    blocksMap[blockID] = cacheChain.begin();
 
     cacheChain.erase(blockIter); // erase from original location
     return cacheChain.begin();
@@ -131,12 +130,6 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
     cacheChain.emplace_front(block);
     blocksMap[block->getBlockId()] = cacheChain.begin();
 
-    // correct both boundaries and update the new bounds section attribute
-    middleSectionIter--;
-    (*middleSectionIter)->setSection(middleSection);
-    oldSectionIter--;
-    (*oldSectionIter)->setSection(oldSection);
-
     // remove the last element if the list is not full
     if (cacheChain.back()->getBlockNumber() == NULL_BLOCK){
         cacheChain.pop_back();
@@ -155,23 +148,53 @@ void CacheManager::insertBlock(int fileId, int blockNumber, const char *buff,
         blocksMap.erase((*eraseCandidateBlockIter)->getBlockId());
         cacheChain.erase(eraseCandidateBlockIter);
     }
+    // correct both boundaries and update the new bounds section attribute
+    middleSectionIter--;
+    (*middleSectionIter)->setSection(middleSection);
+    oldSectionIter--;
+    (*oldSectionIter)->setSection(oldSection);
 }
 
 /**
  * @brief update the path of files in the given path prefix
  */
 void CacheManager::updatePaths(const char* pathPrefix, const char * newPathPrefix) {
+
+    // if pathPrefix have no '/', add it
+    std::string pathPrefixStr(pathPrefix);
+    if (pathPrefixStr[pathPrefixStr.length()-1] != '/'){
+        pathPrefixStr.push_back('/');
+    }
+
     for (CacheChain::iterator it = cacheChain.begin(); it !=
                                                        cacheChain.end(); it++){
+
         if ((*it)->getFileId() == NULL_BLOCK){
             continue;
         }
-        if (strncmp((*it)->getPath(), pathPrefix, strlen(pathPrefix)) == 0){
-            std::string oldPath = (*it)->getPath();
-            std::string prefix = newPathPrefix;
-            std::string resPath = oldPath;
 
-            resPath.replace(0, prefix.length(), prefix);
+        // for each block, if path doesn't have '/' suffix - add it only for the comparison
+        std::string pathStr(it.operator*()->getPath());
+        if (pathStr[pathStr.length()-1] != '/'){
+            pathStr.push_back('/');
+        }
+
+        // if prefix - replace the prefix with newPrefix (without '/')
+        if (pathStr.compare(0, pathPrefixStr.size(), pathPrefixStr) == 0){
+            std::string newPrefixStr = newPathPrefix;
+            std::string suffix = pathStr.substr(pathPrefixStr.length(),
+                                pathStr.length() - pathPrefixStr.length());
+            if (newPrefixStr[newPrefixStr.length()-1] != '/' && suffix[0] != '/'){
+                newPrefixStr.push_back('/');
+            }
+
+            std::string resPath = newPrefixStr.append(suffix);
+
+            if (resPath[resPath.length()-1] == '/'){
+                resPath.pop_back();
+            }
+
+//            pathStr.replace(0, newPrefixStr.length(), newPrefixStr);
             (*it)->setPath((char *) resPath.data());
         }
     }
@@ -185,10 +208,11 @@ std::string CacheManager::cacheToString() {
     for (CacheChain::reverse_iterator it = cacheChain.rbegin(); it != cacheChain
             .rend(); it++) {
         if ((*it)->getBlockNumber() != NULL_BLOCK) {
-            std::string pathWithSlash = (*it)->getPath();
-            std::string path = pathWithSlash.erase(0, 1);
-            cacheStrStream<<(path)<<" "<<(std::to_string((*it)->getBlockNumber() + 1))<<" "
-            <<std::to_string((*it)->getRefCount())<<"\n";
+            std::string pathStr = (*it)->getPath();
+            std::string path = pathStr.erase(0, 1);
+            cacheStrStream<<(path)<<" "<<(std::to_string((*it)->
+                    getBlockNumber() + 1))<<" "
+            <<std::to_string((*it)->getRefCount())<<std::endl;
         }
     }
     return cacheStrStream.str();
