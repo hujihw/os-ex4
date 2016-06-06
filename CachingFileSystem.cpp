@@ -116,10 +116,18 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
                     struct fuse_file_info *fi){ // todo handle logfile
     log_call("fgetattr");
 
-    char full_path[PATH_MAX];
-    caching_full_path(full_path, path);
+    char fpath[PATH_MAX];
+    caching_full_path(fpath, path);
 
-    int res = fstat((int) fi->fh, statbuf);
+    int res = 0;
+
+    res = refering_logfile(fpath);
+    if (res)
+    {
+        return -ENONET;
+    }
+
+    res = fstat((int) fi->fh, statbuf);
 
     if (res < 0)
     {
@@ -156,6 +164,11 @@ int caching_access(const char *path, int mask) // todo handle logfile
     }
 
     res = access(full_path, mask);
+    if (res < 0)
+    {
+        return -errno;
+    }
+
     return res;
 }
 
@@ -180,6 +193,12 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
 
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
+
+    retval = refering_logfile(fpath);
+    if (retval)
+    {
+        return -ENONET;
+    }
 
     // turn off FUSE internal cache
     fi->direct_io = 1;
@@ -310,6 +329,11 @@ int caching_read(const char *path, char *buf, size_t size,
             // read the block from the disk
             pread_ret = (int) pread(fd, block_buf, block_size, block_begin);
 
+            if (pread_ret < 0)
+            {
+                return -errno;
+            }
+
             // store block in the cache
             cacheManager->insertBlock((int) st.st_ino, block, block_buf,
                                       (char *) path);
@@ -407,7 +431,12 @@ int caching_flush(const char *path, struct fuse_file_info *fi)
 
     char fpath[PATH_MAX];
     caching_full_path(fpath, path);
+
     int res = refering_logfile(fpath);
+    if (res)
+    {
+        return -ENONET;
+    }
 
     return res;
 }
@@ -443,6 +472,11 @@ int caching_release(const char *path, struct fuse_file_info *fi){
     fstat(fi->fh, &st);
 
     res = close((int) fi->fh);
+
+    if (res < 0)
+    {
+        return -errno;
+    }
 
     return res;
 }
@@ -516,8 +550,7 @@ int caching_readdir(const char *path, void *buf,
     {
         if (dirEnt == 0)
         {
-            res = -errno;
-            return res;
+            return -errno;
         }
 
         char fpath[PATH_MAX];
@@ -548,9 +581,19 @@ int caching_readdir(const char *path, void *buf,
 int caching_releasedir(const char *path, struct fuse_file_info *fi){
     log_call("releasedir"); // todo verify
 
+    int log = refering_logfile((char *) path);
+    if (log)
+    {
+        return -ENONET;
+    }
+
     uint64_t dp = fi->fh;
     (void) path;
-    closedir((DIR *) dp);
+    int res = closedir((DIR *) dp);
+    if (res < 0)
+    {
+        return -errno;
+    }
 
     return 0;
 }
