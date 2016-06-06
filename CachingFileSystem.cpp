@@ -26,7 +26,7 @@
 #define ARGS_NUM 6
 
 using namespace std;
-static char logfile_name[PATH_MAX] = ".filesystem.log"; // todo ignore logfile in all functions
+static char logfile_name[PATH_MAX] = ".filesystem.log";
 
 static CacheManager *cacheManager;
 struct fuse_operations caching_oper;
@@ -113,7 +113,7 @@ int caching_getattr(const char *path, struct stat *statbuf){
  * Introduced in version 2.5
  */
 int caching_fgetattr(const char *path, struct stat *statbuf,
-                    struct fuse_file_info *fi){ // todo handle logfile
+                    struct fuse_file_info *fi){
     log_call("fgetattr");
 
     char fpath[PATH_MAX];
@@ -148,7 +148,7 @@ int caching_fgetattr(const char *path, struct stat *statbuf,
  *
  * Introduced in version 2.5
  */
-int caching_access(const char *path, int mask) // todo handle logfile
+int caching_access(const char *path, int mask)
 {
     log_call("access");
 
@@ -186,7 +186,7 @@ int caching_access(const char *path, int mask) // todo handle logfile
 
  * Changed in version 2.2
  */
-int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle logfile
+int caching_open(const char *path, struct fuse_file_info *fi){
     log_call("open");
 
     int retval = 0;
@@ -242,8 +242,6 @@ int caching_open(const char *path, struct fuse_file_info *fi){ // todo handle lo
 int caching_read(const char *path, char *buf, size_t size,
                 off_t offset, struct fuse_file_info *fi){
     log_call("read");
-
-    cout << "-- read --" << endl; // todo remove
 
     size_t res = 0;
 
@@ -304,7 +302,6 @@ int caching_read(const char *path, char *buf, size_t size,
     // read data from file blocks
     for (int block = first_block; block < last_block; block++)
     {
-        cout << "block: " << block + 1<< endl; // todo remove
         int block_begin = block * block_size;
         block_offset = 0;
 
@@ -321,7 +318,6 @@ int caching_read(const char *path, char *buf, size_t size,
         // couldn't find the block in the cache
         if (block_buf == nullptr)
         {
-            cout << "readig from the disk" << endl; // todo remove
 
             // allocate space for data from the disk
             block_buf = (char *) aligned_alloc(block_size, block_size);
@@ -342,11 +338,9 @@ int caching_read(const char *path, char *buf, size_t size,
         // calculate the offset in the first block
         if (block == first_block)
         {
-            cout << "in first block -- res is: " << res << endl; // todo remove
 
             // calculate block offset
-//            block_offset = offset_prog % block_size;
-            block_offset = offset % block_size;
+            block_offset = (int) (offset % block_size);
 
             // calculate size to copy
             if (pread_ret == 0)
@@ -360,45 +354,24 @@ int caching_read(const char *path, char *buf, size_t size,
         // calculate the amount of bytes to take in the last block
         if (block == last_block - 1)
         {
-            cout << "in last block! res is: " << res << endl; // todo remove
-            cout << "remaining data is: " << remaining_data << endl; // todo remove
             // calculate size to copy
             size_to_copy = remaining_data;
 
-//            // memcopy to buf
-//            memcpy(buf + buf_prog, block_buf, size_to_copy);
         }
 
 
         if ((block != first_block) || (block != last_block - 1))
         {
-            cout << "middle block... res is: " << res << endl; // todo remove
 
 //            // add data to the return buffer
-//            memcpy(buf + buf_prog, block_buf, size_to_copy);
         }
 
-        cout << "========================="<<endl; // todo remove
-        cout << cacheManager->cacheToString() << endl; // todo remove
-        cout << "========================="<<endl; // todo remove
-        cout << "pread_ret " << pread_ret << endl; // todo remove
-        cout << "size_to_copy " << size_to_copy << endl; // todo remove
-        cout << "remaining_data " << remaining_data << endl; // todo remove
-        cout << "buf_prog " << buf_prog << endl; // todo remove
-        cout << "block_offset " << block_offset << endl; // todo remove
-        cout << "file_size " << file_size << endl; // todo remove
-//        cout << "offset_prog " << offset_prog << endl; // todo remove
-
-        cout << "before memcpy, size_to_copy is: " << size_to_copy << endl; // todo remove
         memcpy(buf + buf_prog, block_buf + block_offset, size_to_copy);
 
         res += size_to_copy;
         buf_prog += size_to_copy;
-//        offset_prog += size_to_copy;
         remaining_data -= size_to_copy;
     }
-
-    cout << "res: " << res << endl; // todo remove
     return (int) res;
 }
 
@@ -579,7 +552,7 @@ int caching_readdir(const char *path, void *buf,
  * Introduced in version 2.3
  */
 int caching_releasedir(const char *path, struct fuse_file_info *fi){
-    log_call("releasedir"); // todo verify
+    log_call("releasedir");
 
     int log = refering_logfile((char *) path);
     if (log)
@@ -798,16 +771,12 @@ int main(int argc, char* argv[]){
         argv[i] = NULL;
     }
         argv[2] = (char*) "-s";
-//        argv[3] = (char*) "-f"; // todo remove before submission
-//    argc = 4;
     argc = 3;
 
     int fuse_stat = fuse_main(argc, argv, &caching_oper, &cfs_st);
 
     free(cfs_st.rootdir);
     delete cacheManager;
-
-    // todo fix memory leek in open_log(char *). Should be in caching_destroy?
 
     return fuse_stat;
 }
